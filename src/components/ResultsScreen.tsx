@@ -8,6 +8,7 @@ import { SourcePanel } from './SourcePanel';
 import { CuratedList } from './CuratedList';
 import { OutputRow } from './OutputRow';
 import { ExportImportControls } from './ExportImportControls';
+import { GitHubButton } from './GitHubButton';
 
 interface Props {
   state: AppState;
@@ -37,14 +38,14 @@ export function ResultsScreen({ state: s, actions, onSubmit, onExport, onTrigger
         <button
           type="button"
           aria-label="Start over"
-          class="flex items-center gap-2 flex-shrink-0 bg-transparent border-none p-0 cursor-pointer text-success transition-opacity duration-150 hover:opacity-80"
+          class="order-1 flex items-center gap-2 flex-shrink-0 bg-transparent border-none p-0 cursor-pointer text-success transition-opacity duration-150 hover:opacity-80"
           onClick={() => actions.reset()}
         >
           <img src={logoUrl.src} alt="" aria-hidden="true" class="h-8 w-8 flex-shrink-0" />
           <span class="font-header text-success text-[17px] tracking-[-0.01em] whitespace-nowrap">PZ MOD EXTRACTOR</span>
         </button>
         <form
-          class="flex-1 min-w-[260px] flex bg-knox-void border border-border-standard rounded-none overflow-hidden"
+          class="order-3 md:order-2 flex-1 min-w-[260px] flex bg-knox-void border border-border-standard rounded-none overflow-hidden"
           onSubmit={(e) => {
             e.preventDefault();
             onSubmit();
@@ -73,6 +74,7 @@ export function ResultsScreen({ state: s, actions, onSubmit, onExport, onTrigger
             )}
           </button>
         </form>
+        <GitHubButton class="order-2 md:order-3" />
       </div>
       <div role="status" class="pt-2 px-8 text-[13px] text-danger">
         {s.errorMsg}

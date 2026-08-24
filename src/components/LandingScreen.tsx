@@ -1,6 +1,7 @@
 import type { JSX } from 'preact';
 import { classifyInput } from '../lib/modLogic';
 import { chipStyle, TEXT_BTN_STYLE } from '../lib/styles';
+import { GitHubButton } from './GitHubButton';
 
 interface Props {
   inputValue: string;
@@ -38,6 +39,7 @@ export function LandingScreen({ inputValue, loading, errorMsg, onInputChange, on
 
   return (
     <div class="flex flex-col items-center justify-center min-h-screen p-6">
+      <GitHubButton class="fixed top-4 right-4" />
       <div class="max-w-[680px] w-full text-center">
         <h1 class="font-header text-[48px] font-normal tracking-[-0.02em] text-text-base mb-3">PZ MOD EXTRACTOR</h1>
         <p class="text-[17px] text-text-muted mb-8 leading-[1.5]">
