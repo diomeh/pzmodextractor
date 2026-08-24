@@ -1,4 +1,4 @@
-interface ModEntry {
+export interface ModEntry {
   publishedfileid: string;
   title: string;
   previewUrl: string;
@@ -8,7 +8,7 @@ interface ModEntry {
   names: string[];
 }
 
-interface CuratedItem {
+export interface CuratedItem {
   key: string;
   publishedfileid: string;
   title: string;
@@ -25,7 +25,7 @@ interface OutputRow {
 type Screen = 'landing' | 'results';
 type FilterKey = 'multiOnly' | 'hideAdded' | 'hideFailed';
 
-interface AppState {
+export interface AppState {
   screen: Screen;
   loading: boolean;
   errorMsg: string;
@@ -51,7 +51,7 @@ interface AppState {
 
 const EXPORT_SCHEMA_VERSION = 1;
 
-interface ModExtractorExportPayload {
+export interface ModExtractorExportPayload {
   schemaVersion: number;
   exportedAt: string;
   fetchedAt: string | null;
@@ -62,7 +62,7 @@ interface ModExtractorExportPayload {
   curated: CuratedItem[];
 }
 
-function esc(value: string): string {
+export function esc(value: string): string {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -105,7 +105,7 @@ const BB_ALLOWED_TAGS: ReadonlySet<string> = new Set([
 ]);
 const BB_BLOCK_TAGS: ReadonlySet<string> = new Set(['h1', 'h2', 'h3', 'list', 'olist', 'hr']);
 
-function parseBBCode(raw: string): BBElementNode {
+export function parseBBCode(raw: string): BBElementNode {
   const root: BBElementNode = { type: 'root', children: [] };
   const stack: BBElementNode[] = [root];
   const tagRe = /\[(\/)?([a-zA-Z0-9]+|\*)(=[^\]]*)?\]/g;
@@ -168,11 +168,11 @@ function parseBBCode(raw: string): BBElementNode {
   return root;
 }
 
-function bbExtractText(nodes: BBNode[]): string {
+export function bbExtractText(nodes: BBNode[]): string {
   return nodes.map((n) => (n.type === 'text' ? n.value : bbExtractText(n.children))).join('');
 }
 
-function bbSafeUrl(value: string): string | null {
+export function bbSafeUrl(value: string): string | null {
   try {
     const parsed = new URL(value.trim());
     if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
@@ -243,7 +243,7 @@ function bbRenderParagraph(paragraph: string): string {
   return `<p style="margin:0 0 8px;">${bbRenderNodes(tree.children)}</p>`;
 }
 
-function renderDescription(raw: string): string {
+export function renderDescription(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return '<span>No description available.</span>';
   return trimmed
@@ -262,7 +262,7 @@ function renderDescription(raw: string): string {
 const EXCLUSIVE_HINT_PATTERN =
   /only (?:use|enable|run|activate) one|only one (?:should|can) be|choose one|pick one|mutually exclusive|do not (?:use|enable|run) (?:both|more than one)|not (?:both|together)|branch(?:es)?\b/i;
 
-function looksExclusive(description: string): boolean {
+export function looksExclusive(description: string): boolean {
   return EXCLUSIVE_HINT_PATTERN.test(description);
 }
 
@@ -320,13 +320,13 @@ function randomSuffix(): string {
   return Math.random().toString(36).slice(2);
 }
 
-function candidateKey(publishedfileid: string, name: string): string {
+export function candidateKey(publishedfileid: string, name: string): string {
   return `${publishedfileid}::${name}`;
 }
 
 // Mirrors the server's extractCollectionId (src/pages/api/convert.ts) just enough to
 // build a link back to the Steam Workshop collection page for whatever was submitted.
-function toCollectionUrl(input: string): string {
+export function toCollectionUrl(input: string): string {
   const trimmed = input.trim();
   if (/^\d+$/.test(trimmed)) {
     return `https://steamcommunity.com/sharedfiles/filedetails/?id=${trimmed}`;
@@ -359,7 +359,7 @@ function pad2(n: number): string {
   return String(n).padStart(2, '0');
 }
 
-function buildExportFilename(state: AppState): string {
+export function buildExportFilename(state: AppState): string {
   const idMatch = state.collectionUrl.match(/[?&]id=(\d+)/);
   const fallbackId = /^\d+$/.test(state.inputValue.trim()) ? state.inputValue.trim() : null;
   const id = idMatch?.[1] || fallbackId || 'modlist';
@@ -370,7 +370,7 @@ function buildExportFilename(state: AppState): string {
   return `pz-modlist-${id}-${stamp}.json`;
 }
 
-function isModEntry(value: unknown): value is ModEntry {
+export function isModEntry(value: unknown): value is ModEntry {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
   return (
@@ -386,7 +386,7 @@ function isModEntry(value: unknown): value is ModEntry {
   );
 }
 
-function isCuratedItem(value: unknown): value is CuratedItem {
+export function isCuratedItem(value: unknown): value is CuratedItem {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
   return (
@@ -397,7 +397,7 @@ function isCuratedItem(value: unknown): value is CuratedItem {
   );
 }
 
-function parseImportPayload(
+export function parseImportPayload(
   raw: unknown,
 ): { ok: true; payload: ModExtractorExportPayload } | { ok: false; error: string } {
   if (!raw || typeof raw !== 'object') {

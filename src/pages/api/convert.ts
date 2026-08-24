@@ -6,8 +6,8 @@ const COLLECTION_URL = 'https://api.steampowered.com/ISteamRemoteStorage/GetColl
 const DETAILS_URL = 'https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/';
 const DETAILS_CHUNK_SIZE = 50;
 
-const WORKSHOP_ID_PATTERN = /Workshop ?ID: (\d*)/gim;
-const MOD_ID_PATTERN = /Mod ?ID: (\d*\w*\d*\w*\d*\.*\d*)/gim;
+export const WORKSHOP_ID_PATTERN = /Workshop ?ID: (\d*)/gim;
+export const MOD_ID_PATTERN = /Mod ?ID: (\d*\w*\d*\w*\d*\.*\d*)/gim;
 
 interface CollectionChild {
   publishedfileid: string;
@@ -49,13 +49,13 @@ interface ModEntry {
   names: string[];
 }
 
-function extractMatches(text: string, pattern: RegExp): string[] {
+export function extractMatches(text: string, pattern: RegExp): string[] {
   return (text.match(pattern) || [])
     .map((s) => s.split(': ')[1]?.trim())
     .filter((v): v is string => Boolean(v));
 }
 
-function extractCollectionId(input: string): string | null {
+export function extractCollectionId(input: string): string | null {
   const trimmed = input.trim();
   if (/^\d+$/.test(trimmed)) return trimmed;
   try {
