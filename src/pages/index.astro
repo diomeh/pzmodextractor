@@ -1,11 +1,416 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="PZ Mod Converter">
+	<main>
+		<h1>Steam Collection &rarr; Project Zomboid Mod String</h1>
+		<p class="subtitle">
+			Paste a Steam Workshop collection URL (or its numeric ID) to build the
+			<code>WorkshopItems=</code> and <code>Mods=</code> lines for your PZ server config.
+		</p>
+
+		<form id="convert-form">
+			<input
+				id="collection-input"
+				type="text"
+				placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=... or a numeric ID"
+				autocomplete="off"
+			/>
+			<button id="convert-btn" type="submit">Fetch</button>
+		</form>
+
+		<p id="status" role="status"></p>
+
+		<div id="mod-list"></div>
+
+		<div id="output" hidden></div>
+	</main>
 </Layout>
+
+<style>
+	main {
+		max-width: 860px;
+		margin: 0 auto;
+		padding: 40px 20px 80px;
+		font-family: system-ui, sans-serif;
+		color: #c6d4df;
+		background: #10161d;
+		min-height: 100vh;
+	}
+
+	h1 {
+		font-size: 24px;
+		color: #fff;
+		margin-bottom: 8px;
+	}
+
+	.subtitle {
+		color: #8f98a0;
+		font-size: 14px;
+		margin-bottom: 24px;
+	}
+
+	code {
+		background: #1b2838;
+		padding: 1px 5px;
+		border-radius: 3px;
+		font-size: 13px;
+	}
+
+	#convert-form {
+		display: flex;
+		gap: 8px;
+	}
+
+	#collection-input {
+		flex: 1;
+		background: #1b2838;
+		border: 1px solid #316282;
+		border-radius: 4px;
+		padding: 10px 12px;
+		color: #c6d4df;
+		font-size: 14px;
+	}
+
+	#collection-input:focus {
+		outline: none;
+		border-color: #66c0f4;
+	}
+
+	#convert-btn {
+		background: #66c0f4;
+		color: #1b2838;
+		font-weight: 700;
+		border: none;
+		border-radius: 4px;
+		padding: 0 20px;
+		cursor: pointer;
+		font-size: 14px;
+	}
+
+	#convert-btn:hover:not(:disabled) {
+		background: #7ed0ff;
+	}
+
+	#convert-btn:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+
+	#status {
+		color: #8f98a0;
+		font-size: 13px;
+		min-height: 18px;
+	}
+
+	#status.error {
+		color: #e05252;
+	}
+
+	#mod-list {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.mod-row {
+		display: flex;
+		gap: 12px;
+		padding: 14px 0;
+		border-bottom: 1px solid #2a3f5a;
+	}
+
+	.mod-row img {
+		width: 72px;
+		height: 72px;
+		object-fit: cover;
+		border-radius: 4px;
+		flex-shrink: 0;
+		background: #1b2838;
+	}
+
+	.mod-row-body {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.mod-title {
+		color: #fff;
+		font-size: 15px;
+		text-decoration: none;
+	}
+
+	.mod-title:hover {
+		color: #66c0f4;
+	}
+
+	.mod-meta {
+		font-size: 12px;
+		color: #8f98a0;
+		margin-top: 3px;
+	}
+
+	.mod-warn {
+		color: #e05252;
+		font-size: 12px;
+		margin-top: 3px;
+	}
+
+	.mod-ids {
+		margin-top: 8px;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px 16px;
+	}
+
+	.mod-id-option {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		font-size: 13px;
+	}
+
+	.mod-id-option label {
+		cursor: pointer;
+	}
+
+	#output {
+		position: sticky;
+		bottom: 0;
+		margin-top: 24px;
+		padding: 16px;
+		background: #171a21;
+		border: 1px solid #316282;
+		border-radius: 6px;
+	}
+
+	.output-row {
+		display: flex;
+		gap: 8px;
+		margin-bottom: 8px;
+	}
+
+	.output-row:last-child {
+		margin-bottom: 0;
+	}
+
+	.output-row textarea {
+		flex: 1;
+		resize: none;
+		height: 36px;
+		background: #0e141b;
+		color: #c6d4df;
+		border: 1px solid #316282;
+		border-radius: 3px;
+		padding: 7px 9px;
+		font-size: 12px;
+		font-family: Consolas, monospace;
+	}
+
+	.output-row button {
+		background: #2a475e;
+		color: #c6d4df;
+		border: 1px solid #316282;
+		border-radius: 3px;
+		padding: 0 14px;
+		cursor: pointer;
+		font-size: 12px;
+	}
+
+	.output-row button:hover {
+		background: #366d95;
+		color: #fff;
+	}
+</style>
+
+<script>
+	interface ModEntry {
+		publishedfileid: string;
+		title: string;
+		previewUrl: string;
+		ok: boolean;
+		ids: string[];
+		names: string[];
+		selected: number;
+	}
+
+	const form = document.getElementById('convert-form') as HTMLFormElement;
+	const input = document.getElementById('collection-input') as HTMLInputElement;
+	const btn = document.getElementById('convert-btn') as HTMLButtonElement;
+	const status = document.getElementById('status') as HTMLParagraphElement;
+	const list = document.getElementById('mod-list') as HTMLDivElement;
+	const output = document.getElementById('output') as HTMLDivElement;
+
+	function setStatus(text: string, isError = false) {
+		status.textContent = text;
+		status.classList.toggle('error', isError);
+	}
+
+	function buildOutput(mods: ModEntry[]) {
+		const workshopItems = mods.flatMap((m) => m.ids);
+		const modNames = mods.map((m) => m.names[m.selected]).filter(Boolean);
+		const modList = mods
+			.map(
+				(m, i) =>
+					`${i + 1}. WorkshopID:[${m.ids[0] || '?'}] ModIDs[${m.names.join(', ') || '?'}]`,
+			)
+			.join(', ');
+		return {
+			workshopItems: `WorkshopItems=${workshopItems.join(';')}`,
+			mods: `Mods=${modNames.join(';')}`,
+			modList: `ModList=${modList}`,
+		};
+	}
+
+	function makeOutputRow(label: string, value: string): HTMLDivElement {
+		const row = document.createElement('div');
+		row.className = 'output-row';
+
+		const textarea = document.createElement('textarea');
+		textarea.readOnly = true;
+		textarea.value = value;
+
+		const copyBtn = document.createElement('button');
+		copyBtn.type = 'button';
+		copyBtn.textContent = `Copy ${label}`;
+		copyBtn.addEventListener('click', () => {
+			navigator.clipboard.writeText(textarea.value).then(() => {
+				const original = copyBtn.textContent;
+				copyBtn.textContent = 'Copied!';
+				setTimeout(() => (copyBtn.textContent = original), 1200);
+			});
+		});
+
+		row.appendChild(textarea);
+		row.appendChild(copyBtn);
+		return row;
+	}
+
+	function renderOutput(mods: ModEntry[]) {
+		output.innerHTML = '';
+		output.hidden = false;
+		const out = buildOutput(mods);
+		output.appendChild(makeOutputRow('WorkshopItems', out.workshopItems));
+		output.appendChild(makeOutputRow('Mods', out.mods));
+		output.appendChild(makeOutputRow('ModList', out.modList));
+	}
+
+	function renderModRow(mod: ModEntry, onChange: () => void): HTMLDivElement {
+		const row = document.createElement('div');
+		row.className = 'mod-row';
+
+		const img = document.createElement('img');
+		img.src = mod.previewUrl;
+		img.alt = '';
+		row.appendChild(img);
+
+		const body = document.createElement('div');
+		body.className = 'mod-row-body';
+
+		const link = document.createElement('a');
+		link.href = `https://steamcommunity.com/sharedfiles/filedetails/?id=${mod.publishedfileid}`;
+		link.target = '_blank';
+		link.rel = 'noopener noreferrer';
+		link.className = 'mod-title';
+		link.textContent = mod.title;
+		body.appendChild(link);
+
+		const meta = document.createElement('div');
+		meta.className = 'mod-meta';
+		meta.textContent = `Workshop ID${mod.ids.length > 1 ? 's' : ''}: ${mod.ids.join(', ') || '—'}`;
+		body.appendChild(meta);
+
+		if (!mod.ok) {
+			const warn = document.createElement('div');
+			warn.className = 'mod-warn';
+			warn.textContent = 'Could not load details for this item.';
+			body.appendChild(warn);
+		} else if (mod.names.length === 0) {
+			const warn = document.createElement('div');
+			warn.className = 'mod-warn';
+			warn.textContent = "No Mod ID declared in this item's description.";
+			body.appendChild(warn);
+		} else if (mod.names.length === 1) {
+			const meta2 = document.createElement('div');
+			meta2.className = 'mod-meta';
+			meta2.textContent = `Mod ID: ${mod.names[0]}`;
+			body.appendChild(meta2);
+		} else {
+			const idsWrap = document.createElement('div');
+			idsWrap.className = 'mod-ids';
+			mod.names.forEach((name, idx) => {
+				const optId = `mod-${mod.publishedfileid}-${idx}`;
+				const wrap = document.createElement('div');
+				wrap.className = 'mod-id-option';
+
+				const radio = document.createElement('input');
+				radio.type = 'radio';
+				radio.id = optId;
+				radio.name = `mod-${mod.publishedfileid}`;
+				radio.checked = idx === mod.selected;
+				radio.addEventListener('change', () => {
+					mod.selected = idx;
+					onChange();
+				});
+
+				const label = document.createElement('label');
+				label.htmlFor = optId;
+				label.textContent = name;
+
+				wrap.appendChild(radio);
+				wrap.appendChild(label);
+				idsWrap.appendChild(wrap);
+			});
+			body.appendChild(idsWrap);
+		}
+
+		row.appendChild(body);
+		return row;
+	}
+
+	async function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		const value = input.value.trim();
+		if (!value) return;
+
+		btn.disabled = true;
+		list.innerHTML = '';
+		output.hidden = true;
+		setStatus('Fetching collection…');
+
+		try {
+			const res = await fetch('/api/convert', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ input: value }),
+			});
+			const data = await res.json();
+
+			if (!res.ok) {
+				setStatus(data.error || 'Something went wrong.', true);
+				return;
+			}
+
+			const mods: ModEntry[] = (data.mods || []).map((m: Omit<ModEntry, 'selected'>) => ({
+				...m,
+				selected: 0,
+			}));
+
+			if (mods.length === 0) {
+				setStatus('No items found in this collection.', true);
+				return;
+			}
+
+			setStatus(`${mods.length} item${mods.length === 1 ? '' : 's'} loaded.`);
+			const rerender = () => renderOutput(mods);
+			mods.forEach((mod) => list.appendChild(renderModRow(mod, rerender)));
+			renderOutput(mods);
+		} catch (err) {
+			setStatus(err instanceof Error ? err.message : 'Request failed.', true);
+		} finally {
+			btn.disabled = false;
+		}
+	}
+
+	form.addEventListener('submit', handleSubmit);
+</script>
