@@ -1,3 +1,5 @@
+import logoUrl from '../assets/logo.svg';
+
 export interface ModEntry {
   publishedfileid: string;
   title: string;
@@ -296,49 +298,49 @@ export function looksExclusive(description: string): boolean {
 }
 
 function filterPillStyle(active: boolean): string {
-  return `flex-shrink-0 whitespace-nowrap text-[11px] font-semibold px-[9px] py-[5px] rounded-none cursor-pointer border ${active ? 'border-success bg-success/15 text-success' : 'border-border-standard bg-knox-void text-text-muted'}`;
+  return `flex-shrink-0 whitespace-nowrap text-[11px] font-semibold px-[9px] py-[5px] rounded-none cursor-pointer border transition-colors duration-150 ${active ? 'border-success bg-success/15 text-success hover:bg-success/25' : 'border-border-standard bg-knox-void text-text-muted hover:border-text-muted hover:text-text-base hover:bg-selection-grey'}`;
 }
 
 function tabStyle(active: boolean): string {
-  return `flex-1 p-[10px] rounded-none text-xs font-bold cursor-pointer border ${active ? 'border-success bg-success/12 text-success' : 'border-border-standard bg-knox-void text-text-muted'}`;
+  return `flex-1 p-[10px] rounded-none text-xs font-bold cursor-pointer border transition-colors duration-150 ${active ? 'border-success bg-success/12 text-success hover:bg-success/20' : 'border-border-standard bg-knox-void text-text-muted hover:border-text-muted hover:text-text-base hover:bg-selection-grey'}`;
 }
 
-const BTN_BASE = 'rounded-none px-[14px] py-[10px] text-xs font-bold tracking-[0.03em] cursor-pointer border';
-const TEXT_BTN_STYLE = 'bg-transparent border-none text-text-muted text-xs underline cursor-pointer p-1';
+const BTN_BASE = 'rounded-none px-[14px] py-[10px] text-xs font-bold tracking-[0.03em] cursor-pointer border transition-opacity duration-150';
+const TEXT_BTN_STYLE = 'bg-transparent border-none text-text-muted text-xs underline cursor-pointer p-1 transition-colors duration-150 hover:text-text-base';
 
 function rowStyle(selected: boolean, addable: boolean): string {
-  return `flex p-[10px] rounded-none cursor-pointer border ${selected ? 'border-success bg-success/10' : 'border-transparent bg-transparent'} ${addable ? 'opacity-100' : 'opacity-55'}`;
+  return `flex p-[10px] rounded-none cursor-pointer border transition-colors duration-150 ${selected ? 'border-success bg-success/10' : 'border-transparent bg-transparent hover:bg-selection-grey'} ${addable ? 'opacity-100' : 'opacity-55'}`;
 }
 
 function curatedRowStyle(selected: boolean): string {
-  return `flex items-center gap-2 px-2.5 py-2 rounded-none cursor-pointer border ${selected ? 'border-success bg-success/10' : 'border-transparent bg-header-slate'}`;
+  return `flex items-center gap-2 px-2.5 py-2 rounded-none cursor-pointer border transition-colors duration-150 ${selected ? 'border-success bg-success/10' : 'border-transparent bg-header-slate hover:bg-selection-grey'}`;
 }
 
 function moveBtnStyle(disabled: boolean): string {
-  return `bg-transparent border-none text-text-muted text-[11px] px-1 ${disabled ? 'cursor-not-allowed opacity-30' : 'cursor-pointer opacity-100'}`;
+  return `bg-transparent border-none text-text-muted text-[11px] px-1 transition-colors duration-150 ${disabled ? 'cursor-not-allowed opacity-30' : 'cursor-pointer opacity-100 hover:text-success'}`;
 }
 
 function headerCopyBtnStyle(active: boolean): string {
-  return `rounded-none px-[13px] py-[7px] text-[11px] font-bold tracking-[0.03em] uppercase whitespace-nowrap cursor-pointer transition-[background,border-color,color] duration-[120ms] border ${active ? 'border-success bg-success/15 text-success' : 'border-border-standard bg-knox-void text-text-muted'}`;
+  return `rounded-none px-[13px] py-[7px] text-[11px] font-bold tracking-[0.03em] uppercase whitespace-nowrap cursor-pointer transition-[background,border-color,color] duration-[120ms] border ${active ? 'border-success bg-success/15 text-success hover:bg-success/25' : 'border-border-standard bg-knox-void text-text-muted hover:border-text-muted hover:text-text-base hover:bg-selection-grey'}`;
 }
 
 function b42CheckboxStyle(active: boolean): string {
-  return `w-4 h-4 flex-shrink-0 flex items-center justify-center rounded-none border transition-[background,border-color] duration-[120ms] ${active ? 'border-success bg-success' : 'border-border-standard bg-transparent'}`;
+  return `w-4 h-4 flex-shrink-0 flex items-center justify-center rounded-none border transition-[background,border-color] duration-[120ms] ${active ? 'border-success bg-success' : 'border-border-standard bg-transparent'} group-hover:border-success`;
 }
 
 const B42_CHECKMARK_SVG =
   '<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#000000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function openRowBtnStyle(active: boolean): string {
-  return `flex-shrink-0 border border-border-standard rounded-none px-3 py-1.5 text-[10px] font-bold tracking-[0.05em] uppercase cursor-pointer transition-[background,color] duration-[120ms] ${active ? 'bg-success/15 text-success' : 'bg-transparent text-text-muted'}`;
+  return `flex-shrink-0 border border-border-standard rounded-none px-3 py-1.5 text-[10px] font-bold tracking-[0.05em] uppercase cursor-pointer transition-[background,color] duration-[120ms] ${active ? 'bg-success/15 text-success hover:bg-success/25' : 'bg-transparent text-text-muted hover:text-text-base hover:bg-selection-grey'}`;
 }
 
 function rowCopyBtnStyle(active: boolean): string {
-  return `flex-shrink-0 border border-border-standard rounded-none px-3 py-1.5 text-xs font-semibold cursor-pointer ${active ? 'bg-success text-knox-void' : 'bg-transparent text-success'}`;
+  return `flex-shrink-0 border border-border-standard rounded-none px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors duration-150 ${active ? 'bg-success text-knox-void hover:opacity-90' : 'bg-transparent text-success hover:bg-success/15'}`;
 }
 
 function sourceKindBadgeStyle(kind: SourceKind): string {
-  return `flex-shrink-0 text-[9px] font-extrabold tracking-[0.06em] uppercase px-[7px] py-[3px] border ${kind === 'custom' ? 'border-border-standard text-text-muted' : 'border-success text-success'}`;
+  return `flex-shrink-0 text-[9px] font-extrabold tracking-[0.06em] uppercase px-[7px] py-[3px] border transition-colors duration-150 ${kind === 'custom' ? 'border-border-standard text-text-muted' : 'border-success text-success hover:bg-success/15'}`;
 }
 
 function sourcePanelStyle(kind: SourceKind): string {
@@ -350,7 +352,7 @@ function sourceBadgeStyle(label: string): string {
 }
 
 function sourceActionStyle(tone: 'add' | 'neutral'): string {
-  return `flex-shrink-0 whitespace-nowrap text-[10px] font-bold tracking-[0.04em] uppercase bg-transparent border border-border-standard rounded-none px-[9px] py-1 cursor-pointer ${tone === 'add' ? 'text-success' : 'text-text-muted'}`;
+  return `flex-shrink-0 whitespace-nowrap text-[10px] font-bold tracking-[0.04em] uppercase bg-transparent border border-border-standard rounded-none px-[9px] py-1 cursor-pointer transition-colors duration-150 ${tone === 'add' ? 'text-success hover:bg-success/15 hover:border-success' : 'text-text-muted hover:text-text-base hover:bg-selection-grey'}`;
 }
 
 function chipStyle(tone: 'success' | 'muted' | 'danger'): string {
@@ -819,6 +821,32 @@ class ModExtractorApp {
     this.notify('Cleared modlist.');
   }
 
+  private resetApp(): void {
+    this.setState({
+      screen: 'landing',
+      loading: false,
+      errorMsg: '',
+      inputValue: '',
+      sources: [],
+      selectedModId: null,
+      selectedCandidateIdx: 0,
+      checkedNames: new Set(),
+      expandedDescIds: new Set(),
+      curated: [],
+      selectedCuratedIdx: null,
+      search: '',
+      filterMultiOnly: false,
+      filterHideAdded: false,
+      filterHideFailed: false,
+      b42Format: false,
+      mobileTab: 'workshop',
+      copiedRow: null,
+      toast: null,
+      openRows: {},
+      perLineRows: {},
+    });
+  }
+
   private removeCuratedAt(idx: number): void {
     const arr = [...this.state.curated];
     const [removed] = arr.splice(idx, 1);
@@ -1272,6 +1300,9 @@ class ModExtractorApp {
       case 'toggle-description':
         this.toggleDescription(actionEl.dataset.id as string);
         break;
+      case 'reset':
+        this.resetApp();
+        break;
       case 'noop':
         break;
     }
@@ -1422,7 +1453,7 @@ class ModExtractorApp {
           <p class="text-[17px] text-text-muted mb-8 leading-[1.5]">Paste Steam Workshop collections, single items, or bare IDs — comma separated. Each collection becomes its own panel.</p>
           <form class="mx-form flex items-stretch bg-knox-void border border-border-standard rounded-none overflow-hidden">
             <input id="collection-input" type="text" aria-label="Collections, items or IDs" data-field="inputValue" value="${esc(s.inputValue)}" ${s.loading ? 'disabled' : ''} placeholder="Collection links, item links, or IDs" class="flex-1 min-w-0 bg-transparent border-none outline-none text-text-base text-base px-5 py-[18px]" />
-            <button type="submit" ${s.loading ? 'disabled' : ''} aria-label="Convert" class="w-[60px] border-none bg-success text-knox-void text-xl cursor-pointer flex items-center justify-center">${spinner}</button>
+            <button type="submit" ${s.loading ? 'disabled' : ''} aria-label="Convert" class="w-[60px] border-none bg-success text-knox-void text-xl cursor-pointer flex items-center justify-center transition-opacity duration-150 hover:opacity-90 disabled:hover:opacity-100">${spinner}</button>
           </form>
           <div class="flex items-center justify-center gap-1.5 flex-wrap min-h-[26px] mt-3.5">${this.renderClassificationChips()}</div>
           <div role="status" class="min-h-[22px] mt-1 text-sm text-danger">${esc(s.errorMsg)}</div>
@@ -1463,7 +1494,7 @@ class ModExtractorApp {
                   const isAddedName = s.curated.some((c) => c.publishedfileid === m.publishedfileid && c.name === name);
                   const isChecked = isAddedName || s.checkedNames.has(candidateKey(m.publishedfileid, name));
                   return `
-                    <label class="flex items-center gap-1.5 text-xs ${isChecked ? 'text-success' : 'text-text-base'} ${isAddedName ? 'cursor-default' : 'cursor-pointer'}">
+                    <label class="flex items-center gap-1.5 text-xs transition-colors duration-150 ${isChecked ? 'text-success' : 'text-text-base'} ${isAddedName ? 'cursor-default' : 'cursor-pointer hover:text-success'}">
                       <input type="checkbox" data-action="toggle-candidate" data-id="${esc(m.publishedfileid)}" data-idx="${idx}" ${isChecked ? 'checked' : ''} ${isAddedName ? 'disabled' : ''} class="accent-success" />
                       ${esc(name)}${isAddedName ? ' <span class="text-[10px] text-text-muted">(added)</span>' : ''}
                     </label>
@@ -1487,7 +1518,7 @@ class ModExtractorApp {
           ${thumb}
           <div class="flex-1 min-w-0">
             <div class="mx-scroll text-xs text-text-muted leading-[1.4] mb-1 ${isDescExpanded ? 'max-h-[220px] overflow-y-auto pr-1' : 'line-clamp-2'}" data-scroll-id="desc-${esc(m.publishedfileid)}">${renderDescription(m.description)}</div>
-            ${hasDescription ? `<button type="button" data-action="toggle-description" data-id="${esc(m.publishedfileid)}" class="text-[11px] text-success bg-transparent border-none p-0 mb-1 cursor-pointer underline">${isDescExpanded ? 'Show less' : 'Show more'}</button>` : ''}
+            ${hasDescription ? `<button type="button" data-action="toggle-description" data-id="${esc(m.publishedfileid)}" class="text-[11px] text-success bg-transparent border-none p-0 mb-1 cursor-pointer underline transition-colors duration-150 hover:text-[#6ec96e]">${isDescExpanded ? 'Show less' : 'Show more'}</button>` : ''}
             <div><a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${esc(m.publishedfileid)}" target="_blank" rel="noopener noreferrer" class="text-[11px]">View on Workshop ↗</a></div>
           </div>
         </div>
@@ -1503,7 +1534,7 @@ class ModExtractorApp {
               ${m.names.length > 1 ? `<span class="flex-shrink-0 text-[10px] font-bold text-success bg-success/15 border border-border-standard rounded-none px-[7px] py-px">${m.names.length} IDs</span>` : ''}
               <div class="flex-shrink-0 flex items-center gap-1.5 ml-auto">
                 ${isAdded ? `<span class="flex-shrink-0 text-[10px] font-bold text-text-muted bg-knox-void border border-border-standard rounded-none px-[7px] py-px">Added</span>` : ''}
-                ${addableMod ? `<button type="button" data-action="quick-add" data-id="${esc(m.publishedfileid)}" data-src="${esc(source.key)}" aria-label="Add ${esc(m.title)}" class="flex-shrink-0 text-[10px] font-bold text-knox-void bg-success border-none rounded-none px-2 py-0.5 cursor-pointer">+ Add</button>` : ''}
+                ${addableMod ? `<button type="button" data-action="quick-add" data-id="${esc(m.publishedfileid)}" data-src="${esc(source.key)}" aria-label="Add ${esc(m.title)}" class="flex-shrink-0 text-[10px] font-bold text-knox-void bg-success border-none rounded-none px-2 py-0.5 cursor-pointer transition-opacity duration-150 hover:opacity-90">+ Add</button>` : ''}
               </div>
             </div>
             <div class="text-[11px] text-text-muted mt-0.5">Workshop: ${esc(idsText)}</div>
@@ -1533,7 +1564,7 @@ class ModExtractorApp {
         : `<a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer" data-action="noop" title="View on Steam" class="${sourceKindBadgeStyle(source.kind)}">Collection</a>`;
 
     const header = `
-      <div data-action="toggle-source" data-key="${esc(source.key)}" aria-label="${source.open ? 'Collapse' : 'Expand'} source" class="flex items-center gap-2.5 px-3.5 py-[11px] bg-header-slate border-b border-border-standard flex-wrap cursor-pointer">
+      <div data-action="toggle-source" data-key="${esc(source.key)}" aria-label="${source.open ? 'Collapse' : 'Expand'} source" class="flex items-center gap-2.5 px-3.5 py-[11px] bg-header-slate border-b border-border-standard flex-wrap cursor-pointer transition-colors duration-150 hover:bg-selection-grey">
         <span class="text-text-muted text-[11px]">${source.open ? '▾' : '▸'}</span>
         ${kindBadge}
         <span class="flex-1 min-w-0 text-[13px] font-bold text-text-base whitespace-nowrap overflow-hidden text-ellipsis">${esc(source.title)}</span>
@@ -1543,7 +1574,7 @@ class ModExtractorApp {
           <button type="button" data-action="add-source-single" data-key="${esc(source.key)}" class="${sourceActionStyle('add')}">Single-ID only</button>
           <button type="button" data-action="clear-source" data-key="${esc(source.key)}" class="${sourceActionStyle('neutral')}">Clear</button>
         </div>
-        ${source.kind !== 'custom' ? `<button type="button" data-action="remove-source" data-key="${esc(source.key)}" aria-label="Remove source" class="bg-transparent border-none text-danger text-[15px] cursor-pointer leading-none px-0.5">×</button>` : ''}
+        ${source.kind !== 'custom' ? `<button type="button" data-action="remove-source" data-key="${esc(source.key)}" aria-label="Remove source" class="bg-transparent border-none text-danger text-[15px] cursor-pointer leading-none px-0.5 transition-opacity duration-150 hover:opacity-70">×</button>` : ''}
       </div>
     `;
 
@@ -1552,7 +1583,7 @@ class ModExtractorApp {
         ? `
           <form data-action="add-to-custom-form" data-key="${esc(source.key)}" class="flex gap-2 mb-2.5">
             <input type="text" aria-label="Add one item" data-source-draft="${esc(source.key)}" value="${esc(source.draft)}" placeholder="+ Add one item by link or ID" ${source.draftLoading ? 'disabled' : ''} class="flex-1 min-w-0 box-border bg-knox-void border border-success text-text-base text-[13px] px-2.5 py-2" />
-            <button type="submit" ${source.draftLoading || !source.draft.trim() ? 'disabled' : ''} class="${BTN_BASE} ${source.draft.trim() && !source.draftLoading ? 'bg-success text-knox-void border-success' : 'bg-knox-void text-text-muted border-border-standard opacity-50 cursor-not-allowed'}">${source.draftLoading ? '…' : 'Fetch'}</button>
+            <button type="submit" ${source.draftLoading || !source.draft.trim() ? 'disabled' : ''} class="${BTN_BASE} ${source.draft.trim() && !source.draftLoading ? 'bg-success text-knox-void border-success hover:opacity-90' : 'bg-knox-void text-text-muted border-border-standard opacity-50 cursor-not-allowed'}">${source.draftLoading ? '…' : 'Fetch'}</button>
           </form>
           ${source.draftError ? `<div class="text-[11px] text-danger mb-2.5">${esc(source.draftError)}</div>` : ''}
         `
@@ -1601,7 +1632,7 @@ class ModExtractorApp {
           <button type="button" data-action="move-curated-up" data-idx="${idx}" ${moveUpDisabled ? 'disabled' : ''} aria-label="Move up" class="${moveBtnStyle(moveUpDisabled)}">↑</button>
           <button type="button" data-action="move-curated-down" data-idx="${idx}" ${moveDownDisabled ? 'disabled' : ''} aria-label="Move down" class="${moveBtnStyle(moveDownDisabled)}">↓</button>
         </div>
-        <button type="button" data-action="remove-curated" data-idx="${idx}" aria-label="Remove ${esc(item.name)}" class="bg-transparent border-none text-danger text-base cursor-pointer px-1 leading-none">×</button>
+        <button type="button" data-action="remove-curated" data-idx="${idx}" aria-label="Remove ${esc(item.name)}" class="bg-transparent border-none text-danger text-base cursor-pointer px-1 leading-none transition-opacity duration-150 hover:opacity-70">×</button>
       </div>
     `;
   }
@@ -1617,15 +1648,15 @@ class ModExtractorApp {
       ? `
         <div class="border-t border-border-standard px-3.5 py-3">
           <div class="flex items-center justify-between gap-4 mb-2.5">
-            <button type="button" data-action="toggle-per-line" data-row="${row.key}" aria-pressed="${perLine}" class="flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer">
+            <button type="button" data-action="toggle-per-line" data-row="${row.key}" aria-pressed="${perLine}" class="group flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer">
               <span class="${b42CheckboxStyle(perLine)}">${perLine ? B42_CHECKMARK_SVG : ''}</span>
-              <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-base">One per line</span>
+              <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-muted transition-colors duration-150 group-hover:text-success">One per line</span>
             </button>
             ${
               showB42
-                ? `<button type="button" data-action="toggle-b42" aria-pressed="${s.b42Format}" class="flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer mr-auto">
+                ? `<button type="button" data-action="toggle-b42" aria-pressed="${s.b42Format}" class="group flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer mr-auto">
                     <span class="${b42CheckboxStyle(s.b42Format)}">${s.b42Format ? B42_CHECKMARK_SVG : ''}</span>
-                    <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-base">B42 format</span>
+                    <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-muted transition-colors duration-150 group-hover:text-success">B42 format</span>
                   </button>`
                 : ''
             }
@@ -1709,9 +1740,9 @@ class ModExtractorApp {
       <div class="flex flex-col justify-between gap-1.5 border border-border-standard rounded-none px-2.5 py-2">
         <div class="flex items-center justify-between gap-4">
           <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-muted">Copy</span>
-          <button type="button" data-action="toggle-b42" aria-pressed="${s.b42Format}" class="flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer">
+          <button type="button" data-action="toggle-b42" aria-pressed="${s.b42Format}" class="group flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer">
             <span class="${b42CheckboxStyle(s.b42Format)}">${s.b42Format ? B42_CHECKMARK_SVG : ''}</span>
-            <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-base">B42 format</span>
+            <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-muted transition-colors duration-150 group-hover:text-success">B42 format</span>
           </button>
         </div>
         <div class="flex flex-wrap">
@@ -1740,10 +1771,13 @@ class ModExtractorApp {
       <div>
         ${this.renderToast()}
         <div class="flex items-center gap-4 px-8 py-4 border-b border-border-standard bg-header-slate flex-wrap">
-          <span class="font-header text-success text-[17px] tracking-[-0.01em] whitespace-nowrap">PZ MOD EXTRACTOR</span>
+          <button type="button" data-action="reset" aria-label="Start over" class="flex items-center gap-2 flex-shrink-0 bg-transparent border-none p-0 cursor-pointer text-success transition-opacity duration-150 hover:opacity-80">
+            <img src="${logoUrl.src}" alt="" aria-hidden="true" class="h-8 w-8 flex-shrink-0" />
+            <span class="font-header text-success text-[17px] tracking-[-0.01em] whitespace-nowrap">PZ MOD EXTRACTOR</span>
+          </button>
           <form class="mx-form flex-1 min-w-[260px] flex bg-knox-void border border-border-standard rounded-none overflow-hidden">
             <input id="collection-input" type="text" aria-label="Add collections, items or IDs" data-field="inputValue" value="${esc(s.inputValue)}" ${s.loading ? 'disabled' : ''} placeholder="Add collections, items, or IDs — comma separated" class="flex-1 bg-transparent border-none outline-none text-text-base text-sm px-3.5 py-2.5" />
-            <button type="submit" ${s.loading ? 'disabled' : ''} aria-label="Load" class="w-11 border-none bg-success text-knox-void text-base cursor-pointer flex items-center justify-center">${spinner}</button>
+            <button type="submit" ${s.loading ? 'disabled' : ''} aria-label="Load" class="w-11 border-none bg-success text-knox-void text-base cursor-pointer flex items-center justify-center transition-opacity duration-150 hover:opacity-90 disabled:hover:opacity-100">${spinner}</button>
           </form>
           ${this.renderClassificationChips()}
         </div>
