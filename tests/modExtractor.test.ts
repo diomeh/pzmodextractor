@@ -8,13 +8,15 @@ import {
   candidateKey,
   toCollectionUrl,
   buildExportFilename,
+  classifyInput,
   isModEntry,
   isCuratedItem,
+  isExportedSource,
   parseImportPayload,
   esc,
-  type AppState,
   type ModEntry,
   type CuratedItem,
+  type ExportedSource,
 } from '../src/scripts/modExtractor';
 
 const COLLECTION_ID = '3489663816';
@@ -150,21 +152,48 @@ describe('toCollectionUrl', () => {
 });
 
 describe('buildExportFilename', () => {
-  const baseState = { collectionUrl: '', inputValue: '' } as AppState;
+  it('builds a timestamped filename with no source-specific id', () => {
+    expect(buildExportFilename()).toMatch(/^pz-modlist-\d{8}-\d{4}\.json$/);
+  });
+});
 
-  it('prefers the id embedded in collectionUrl', () => {
-    const name = buildExportFilename({ ...baseState, collectionUrl: ITEM_URL, inputValue: 'ignored' });
-    expect(name).toMatch(new RegExp(`^pz-modlist-${ITEM_ID}-\\d{8}-\\d{4}\\.json$`));
+describe('classifyInput', () => {
+  it('routes a full workshop filedetails URL into collections', () => {
+    const result = classifyInput(ITEM_URL);
+    expect(result.collections).toEqual([ITEM_ID]);
+    expect(result.items).toEqual([]);
+    expect(result.bad).toEqual([]);
   });
 
-  it('falls back to a numeric inputValue when collectionUrl has no id', () => {
-    const name = buildExportFilename({ ...baseState, collectionUrl: '', inputValue: COLLECTION_ID });
-    expect(name).toMatch(new RegExp(`^pz-modlist-${COLLECTION_ID}-\\d{8}-\\d{4}\\.json$`));
+  it('routes a bare numeric ID into items', () => {
+    const result = classifyInput(COLLECTION_ID);
+    expect(result.collections).toEqual([]);
+    expect(result.items).toEqual([COLLECTION_ID]);
   });
 
-  it('falls back to "modlist" when nothing usable is present', () => {
-    const name = buildExportFilename({ ...baseState, collectionUrl: '', inputValue: 'not numeric' });
-    expect(name).toMatch(/^pz-modlist-modlist-\d{8}-\d{4}\.json$/);
+  it('splits on commas and newlines, trimming whitespace', () => {
+    const result = classifyInput(`  ${COLLECTION_ID} ,\n${ITEM_URL}  ,, `);
+    expect(result.items).toEqual([COLLECTION_ID]);
+    expect(result.collections).toEqual([ITEM_ID]);
+  });
+
+  it('collects tokens with no extractable numeric id as bad', () => {
+    const result = classifyInput('not a url or id, also garbage');
+    expect(result.collections).toEqual([]);
+    expect(result.items).toEqual([]);
+    expect(result.bad).toEqual(['not a url or id', 'also garbage']);
+  });
+
+  it('handles a mix of collections, items, and bad tokens in one input', () => {
+    const result = classifyInput(`${ITEM_URL}, ${COLLECTION_ID}, garbage`);
+    expect(result.collections).toEqual([ITEM_ID]);
+    expect(result.items).toEqual([COLLECTION_ID]);
+    expect(result.bad).toEqual(['garbage']);
+  });
+
+  it('returns all-empty for blank input', () => {
+    expect(classifyInput('')).toEqual({ collections: [], items: [], bad: [] });
+    expect(classifyInput('   ')).toEqual({ collections: [], items: [], bad: [] });
   });
 });
 
@@ -187,6 +216,20 @@ function makeCuratedItem(overrides: Partial<CuratedItem> = {}): CuratedItem {
     publishedfileid: ITEM_ID,
     title: 'Test Mod',
     name: 'TestModId',
+    sources: ['Custom'],
+    ...overrides,
+  };
+}
+
+function makeExportedSource(overrides: Partial<ExportedSource> = {}): ExportedSource {
+  return {
+    key: 'custom',
+    kind: 'custom',
+    title: 'Custom items',
+    sourceId: null,
+    url: '',
+    items: [makeModEntry()],
+    fetchedAt: null,
     ...overrides,
   };
 }
@@ -214,28 +257,48 @@ describe('isCuratedItem', () => {
   it('rejects an object missing required fields', () => {
     expect(isCuratedItem({ key: 'x', publishedfileid: ITEM_ID })).toBe(false);
   });
+
+  it('rejects a non-string entry in sources', () => {
+    expect(isCuratedItem({ ...makeCuratedItem(), sources: [1, 2] })).toBe(false);
+  });
+});
+
+describe('isExportedSource', () => {
+  it('accepts a well-formed collection source', () => {
+    expect(isExportedSource(makeExportedSource({ kind: 'collection', sourceId: COLLECTION_ID }))).toBe(true);
+  });
+
+  it('accepts a well-formed custom source with a null sourceId/fetchedAt', () => {
+    expect(isExportedSource(makeExportedSource())).toBe(true);
+  });
+
+  it('rejects an unknown kind', () => {
+    expect(isExportedSource({ ...makeExportedSource(), kind: 'bogus' })).toBe(false);
+  });
+
+  it('rejects a malformed item in items', () => {
+    expect(isExportedSource({ ...makeExportedSource(), items: [{ bogus: true }] })).toBe(false);
+  });
 });
 
 describe('parseImportPayload', () => {
   function validPayload() {
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
       exportedAt: new Date().toISOString(),
-      fetchedAt: null,
-      collectionUrl: ITEM_URL,
-      inputValue: COLLECTION_ID,
-      b42Format: false,
-      mods: [makeModEntry()],
+      sources: [makeExportedSource({ kind: 'collection', sourceId: COLLECTION_ID, title: 'Vanilla+ Essentials' })],
       curated: [makeCuratedItem()],
     };
   }
 
-  it('accepts a well-formed export payload round-trip', () => {
+  it('accepts a well-formed export payload round-trip, preserving sources and curated order', () => {
     const result = parseImportPayload(validPayload());
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.payload.mods).toHaveLength(1);
+      expect(result.payload.sources).toHaveLength(1);
+      expect(result.payload.sources[0].title).toBe('Vanilla+ Essentials');
       expect(result.payload.curated).toHaveLength(1);
+      expect(result.payload.curated[0].sources).toEqual(['Custom']);
     }
   });
 
@@ -245,15 +308,15 @@ describe('parseImportPayload', () => {
   });
 
   it('rejects an unrecognized schemaVersion', () => {
-    const result = parseImportPayload({ ...validPayload(), schemaVersion: 999 });
+    const result = parseImportPayload({ ...validPayload(), schemaVersion: 1 });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toMatch(/incompatible version/i);
   });
 
-  it('rejects malformed mod entries', () => {
-    const result = parseImportPayload({ ...validPayload(), mods: [{ bogus: true }] });
+  it('rejects malformed source entries', () => {
+    const result = parseImportPayload({ ...validPayload(), sources: [{ bogus: true }] });
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toMatch(/mod entry/i);
+    if (!result.ok) expect(result.error).toMatch(/source entry/i);
   });
 
   it('rejects malformed curated entries', () => {
@@ -264,14 +327,9 @@ describe('parseImportPayload', () => {
 
   it('rejects a payload missing required scalar fields', () => {
     const payload = validPayload() as any;
-    delete payload.b42Format;
+    delete payload.exportedAt;
     const result = parseImportPayload(payload);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toMatch(/missing required fields/i);
-  });
-
-  it('accepts a string fetchedAt as well as null', () => {
-    const result = parseImportPayload({ ...validPayload(), fetchedAt: new Date().toISOString() });
-    expect(result.ok).toBe(true);
   });
 });

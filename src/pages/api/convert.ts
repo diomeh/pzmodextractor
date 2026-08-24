@@ -49,6 +49,12 @@ interface ModEntry {
   names: string[];
 }
 
+interface SourceInfo {
+  id: string;
+  title: string;
+  url: string;
+}
+
 export function extractMatches(text: string, pattern: RegExp): string[] {
   return (text.match(pattern) || [])
     .map((s) => s.split(': ')[1]?.trim())
@@ -121,7 +127,8 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const childIds = await getCollectionChildren(collectionId);
-    const details = await getPublishedFileDetails(childIds);
+    const detailIds = childIds.includes(collectionId) ? childIds : [collectionId, ...childIds];
+    const details = await getPublishedFileDetails(detailIds);
     const detailsById = new Map(details.map((d) => [d.publishedfileid, d]));
 
     const mods: ModEntry[] = childIds.map((id) => {
@@ -138,7 +145,14 @@ export const POST: APIRoute = async ({ request }) => {
       };
     });
 
-    return new Response(JSON.stringify({ mods }), {
+    const collectionDetail = detailsById.get(collectionId);
+    const source: SourceInfo = {
+      id: collectionId,
+      title: collectionDetail?.title || `Workshop item ${collectionId}`,
+      url: `https://steamcommunity.com/sharedfiles/filedetails/?id=${collectionId}`,
+    };
+
+    return new Response(JSON.stringify({ mods, source }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });

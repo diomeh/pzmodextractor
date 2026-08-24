@@ -170,6 +170,59 @@ describe('POST /api/convert', () => {
     expect(second.title).toBe('Unknown item 999');
   });
 
+  it('includes a source title/url derived from the collection id\'s own published-file detail', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (url: string, init: any) => {
+      if (url.includes('GetCollectionDetails')) {
+        return jsonResponse({
+          response: { collectiondetails: [{ result: 1, children: [{ publishedfileid: ITEM_ID, sortorder: 0 }] }] },
+        });
+      }
+      if (url.includes('GetPublishedFileDetails')) {
+        const body = new URLSearchParams(init.body as string);
+        const itemcount = Number(body.get('itemcount'));
+        const requestedIds = Array.from({ length: itemcount }, (_, i) => body.get(`publishedfileids[${i}]`));
+        expect(requestedIds).toContain(COLLECTION_ID);
+        expect(requestedIds).toContain(ITEM_ID);
+        return jsonResponse({
+          response: {
+            publishedfiledetails: [
+              { publishedfileid: COLLECTION_ID, result: 1, title: 'Vanilla+ Essentials' },
+              { publishedfileid: ITEM_ID, result: 1, title: 'Test Mod', description: '' },
+            ],
+          },
+        });
+      }
+      throw new Error(`Unexpected fetch to ${url}`);
+    });
+
+    const res = await POST({ request: makeRequest(COLLECTION_ID) } as Parameters<typeof POST>[0]);
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { mods: any[]; source: { id: string; title: string; url: string } };
+    expect(json.mods).toHaveLength(1);
+    expect(json.source).toEqual({
+      id: COLLECTION_ID,
+      title: 'Vanilla+ Essentials',
+      url: `https://steamcommunity.com/sharedfiles/filedetails/?id=${COLLECTION_ID}`,
+    });
+  });
+
+  it('falls back to a generic source title when the collection id has no own detail', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
+      if (url.includes('GetCollectionDetails')) {
+        return jsonResponse({
+          response: { collectiondetails: [{ result: 1, children: [{ publishedfileid: ITEM_ID }] }] },
+        });
+      }
+      return jsonResponse({
+        response: { publishedfiledetails: [{ publishedfileid: ITEM_ID, result: 1, title: 'Test Mod', description: '' }] },
+      });
+    });
+
+    const res = await POST({ request: makeRequest(COLLECTION_ID) } as Parameters<typeof POST>[0]);
+    const json = (await res.json()) as { source: { title: string } };
+    expect(json.source.title).toBe(`Workshop item ${COLLECTION_ID}`);
+  });
+
   it('accepts a workshop item URL and resolves via its id query param', async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
       if (url.includes('GetCollectionDetails')) {
