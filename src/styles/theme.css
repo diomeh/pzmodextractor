@@ -1,9 +1,11 @@
 /*
   Project Zomboid mod manager — design tokens.
   Colors and font roles mirror the projectZomboidPalette / projectZomboidFonts spec.
+  Defined via Tailwind's @theme so each token is both a CSS custom property
+  (var(--color-knox-void)) and a Tailwind utility (bg-knox-void, font-header, ...).
 */
 
-:root {
+@theme {
   /* Base UI */
   --color-knox-void: #000000;
   --color-header-slate: #1c1c1c;
@@ -25,15 +27,17 @@
   --color-danger: #cc2222;
   --color-warning: #d4b224;
 
-  /* Semantic aliases */
+  /* Fonts */
+  --font-header: 'Special Elite', system-ui;
+  --font-ui: 'IBM Plex Sans', sans-serif;
+  --font-data: 'Share Tech Mono', monospace;
+}
+
+:root {
+  /* Semantic aliases — no Tailwind utilities of their own, referenced via var() */
   --color-bg: var(--color-knox-void);
   --color-bg-panel: var(--color-header-slate);
   --color-bg-hover: var(--color-selection-grey);
   --color-border: var(--color-border-standard);
   --color-text: var(--color-text-base);
-
-  /* Fonts */
-  --font-header: 'Special Elite', system-ui;
-  --font-ui: 'IBM Plex Sans', sans-serif;
-  --font-data: 'Share Tech Mono', monospace;
 }

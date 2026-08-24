@@ -1,0 +1,82 @@
+@import "tailwindcss";
+@import "./theme.css";
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-optical-sizing: auto;
+  font-variation-settings: 'wdth' 100;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-header);
+  font-weight: 400;
+}
+
+@keyframes pz-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pz-toast {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+a {
+  color: var(--color-success);
+  text-decoration: none;
+}
+
+a:hover {
+  color: #6ec96e;
+  text-decoration: underline;
+}
+
+.mx-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) var(--color-bg);
+}
+
+.mx-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.mx-scroll::-webkit-scrollbar-track {
+  background: var(--color-bg);
+  border-radius: 0;
+}
+
+.mx-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 0;
+  border: 2px solid var(--color-bg);
+}
+
+.mx-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--color-success);
+}

@@ -14,6 +14,23 @@ interface CollectionChild {
   sortorder?: number;
 }
 
+interface CollectionDetail {
+  result: number;
+  children?: CollectionChild[];
+}
+
+interface SteamCollectionDetailsResponse {
+  response: {
+    collectiondetails?: CollectionDetail[];
+  };
+}
+
+interface SteamPublishedFileDetailsResponse {
+  response: {
+    publishedfiledetails?: PublishedFileDetail[];
+  };
+}
+
 interface PublishedFileDetail {
   publishedfileid: string;
   result: number;
@@ -48,7 +65,7 @@ function extractCollectionId(input: string): string | null {
   }
 }
 
-async function steamPost(url: string, pairs: [string, string][]) {
+async function steamPost<T>(url: string, pairs: [string, string][]): Promise<T> {
   const body = pairs.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
   const res = await fetch(url, {
     method: 'POST',
@@ -56,15 +73,15 @@ async function steamPost(url: string, pairs: [string, string][]) {
     body,
   });
   if (!res.ok) throw new Error(`Steam API request failed: ${res.status}`);
-  return res.json();
+  return res.json() as Promise<T>;
 }
 
 async function getCollectionChildren(collectionId: string): Promise<string[]> {
-  const json = await steamPost(COLLECTION_URL, [
+  const json = await steamPost<SteamCollectionDetailsResponse>(COLLECTION_URL, [
     ['collectioncount', '1'],
     ['publishedfileids[0]', collectionId],
   ]);
-  const detail = json?.response?.collectiondetails?.[0];
+  const detail = json.response?.collectiondetails?.[0];
   if (!detail || detail.result !== 1 || !Array.isArray(detail.children)) {
     throw new Error('That is not a Steam Workshop collection, or it has no items.');
   }
@@ -80,8 +97,8 @@ async function getPublishedFileDetails(ids: string[]): Promise<PublishedFileDeta
     const chunk = ids.slice(i, i + DETAILS_CHUNK_SIZE);
     const pairs: [string, string][] = [['itemcount', String(chunk.length)]];
     chunk.forEach((id, idx) => pairs.push([`publishedfileids[${idx}]`, id]));
-    const json = await steamPost(DETAILS_URL, pairs);
-    out.push(...((json?.response?.publishedfiledetails as PublishedFileDetail[]) || []));
+    const json = await steamPost<SteamPublishedFileDetailsResponse>(DETAILS_URL, pairs);
+    out.push(...(json.response?.publishedfiledetails || []));
   }
   return out;
 }

@@ -1,5 +1,3 @@
-const MOBILE_BREAKPOINT = 880;
-
 interface ModEntry {
   publishedfileid: string;
   title: string;
@@ -43,7 +41,6 @@ interface AppState {
   filterHideAdded: boolean;
   filterHideFailed: boolean;
   b42Format: boolean;
-  isMobile: boolean;
   mobileTab: 'workshop' | 'modid';
   copiedRow: string | null;
   collectionUrl: string;
@@ -270,65 +267,53 @@ function looksExclusive(description: string): boolean {
 }
 
 function filterPillStyle(active: boolean): string {
-  return `flex-shrink:0;white-space:nowrap;font-size:11px;font-weight:600;padding:5px 9px;border-radius:0;cursor:pointer;border:1px solid ${active ? '#45b545' : '#555555'};background:${active ? 'rgba(69,181,69,0.15)' : '#000000'};color:${active ? '#45b545' : '#999999'};`;
+  return `flex-shrink-0 whitespace-nowrap text-[11px] font-semibold px-[9px] py-[5px] rounded-none cursor-pointer border ${active ? 'border-success bg-success/15 text-success' : 'border-border-standard bg-knox-void text-text-muted'}`;
 }
 
 function tabStyle(active: boolean): string {
-  return `flex:1;padding:10px;border-radius:0;font-size:12px;font-weight:700;border:1px solid ${active ? '#45b545' : '#555555'};background:${active ? 'rgba(69,181,69,0.12)' : '#000000'};color:${active ? '#45b545' : '#999999'};cursor:pointer;`;
+  return `flex-1 p-[10px] rounded-none text-xs font-bold cursor-pointer border ${active ? 'border-success bg-success/12 text-success' : 'border-border-standard bg-knox-void text-text-muted'}`;
 }
 
-const BTN_BASE =
-  'border-radius:0;padding:10px 14px;font-size:12px;font-weight:700;letter-spacing:0.03em;cursor:pointer;border:1px solid #555555;';
-const TEXT_BTN_STYLE =
-  'background:transparent;border:none;color:#999999;font-size:12px;text-decoration:underline;cursor:pointer;padding:4px;';
+const BTN_BASE = 'rounded-none px-[14px] py-[10px] text-xs font-bold tracking-[0.03em] cursor-pointer border';
+const TEXT_BTN_STYLE = 'bg-transparent border-none text-text-muted text-xs underline cursor-pointer p-1';
 
 function addBtnStyle(enabled: boolean): string {
-  return (
-    BTN_BASE +
-    (enabled
-      ? 'background:#45b545;color:#000000;border-color:#45b545;'
-      : 'background:#000000;color:#999999;opacity:0.5;cursor:not-allowed;')
-  );
+  return `${BTN_BASE} ${enabled ? 'bg-success text-knox-void border-success' : 'bg-knox-void text-text-muted border-border-standard opacity-50 cursor-not-allowed'}`;
 }
 
 function removeBtnStyle(enabled: boolean): string {
-  return (
-    BTN_BASE +
-    (enabled
-      ? 'background:#000000;color:#cc2222;border-color:#cc2222;'
-      : 'background:#000000;color:#999999;opacity:0.5;cursor:not-allowed;')
-  );
+  return `${BTN_BASE} ${enabled ? 'bg-knox-void text-danger border-danger' : 'bg-knox-void text-text-muted border-border-standard opacity-50 cursor-not-allowed'}`;
 }
 
 function rowStyle(selected: boolean, addable: boolean): string {
-  return `display:flex;padding:10px;border-radius:0;cursor:pointer;border:1px solid ${selected ? '#45b545' : 'transparent'};background:${selected ? 'rgba(69,181,69,0.10)' : 'transparent'};opacity:${addable ? '1' : '0.55'};`;
+  return `flex p-[10px] rounded-none cursor-pointer border ${selected ? 'border-success bg-success/10' : 'border-transparent bg-transparent'} ${addable ? 'opacity-100' : 'opacity-55'}`;
 }
 
 function curatedRowStyle(selected: boolean): string {
-  return `display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:0;cursor:pointer;border:1px solid ${selected ? '#45b545' : 'transparent'};background:${selected ? 'rgba(69,181,69,0.10)' : '#1c1c1c'};`;
+  return `flex items-center gap-2 px-2.5 py-2 rounded-none cursor-pointer border ${selected ? 'border-success bg-success/10' : 'border-transparent bg-header-slate'}`;
 }
 
 function moveBtnStyle(disabled: boolean): string {
-  return `background:transparent;border:none;color:#999999;font-size:11px;cursor:${disabled ? 'not-allowed' : 'pointer'};opacity:${disabled ? '0.3' : '1'};padding:0 4px;`;
+  return `bg-transparent border-none text-text-muted text-[11px] px-1 ${disabled ? 'cursor-not-allowed opacity-30' : 'cursor-pointer opacity-100'}`;
 }
 
 function headerCopyBtnStyle(active: boolean): string {
-  return `background:${active ? 'rgba(69,181,69,0.15)' : '#000000'};color:${active ? '#45b545' : '#999999'};border:1px solid ${active ? '#45b545' : '#555555'};border-radius:0;padding:7px 13px;font-size:11px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;white-space:nowrap;cursor:pointer;transition:background 0.12s,border-color 0.12s,color 0.12s;`;
+  return `rounded-none px-[13px] py-[7px] text-[11px] font-bold tracking-[0.03em] uppercase whitespace-nowrap cursor-pointer transition-[background,border-color,color] duration-[120ms] border ${active ? 'border-success bg-success/15 text-success' : 'border-border-standard bg-knox-void text-text-muted'}`;
 }
 
 function b42CheckboxStyle(active: boolean): string {
-  return `width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid ${active ? '#45b545' : '#555555'};border-radius:0;background:${active ? '#45b545' : 'transparent'};transition:background 0.12s,border-color 0.12s;`;
+  return `w-4 h-4 flex-shrink-0 flex items-center justify-center rounded-none border transition-[background,border-color] duration-[120ms] ${active ? 'border-success bg-success' : 'border-border-standard bg-transparent'}`;
 }
 
 const B42_CHECKMARK_SVG =
   '<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#000000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function openRowBtnStyle(active: boolean): string {
-  return `flex-shrink:0;background:${active ? 'rgba(69,181,69,0.15)' : 'transparent'};color:${active ? '#45b545' : '#999999'};border:1px solid #555555;border-radius:0;padding:6px 12px;font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;transition:background 0.12s,color 0.12s;`;
+  return `flex-shrink-0 border border-border-standard rounded-none px-3 py-1.5 text-[10px] font-bold tracking-[0.05em] uppercase cursor-pointer transition-[background,color] duration-[120ms] ${active ? 'bg-success/15 text-success' : 'bg-transparent text-text-muted'}`;
 }
 
 function rowCopyBtnStyle(active: boolean): string {
-  return `flex-shrink:0;background:${active ? '#45b545' : 'transparent'};color:${active ? '#000000' : '#45b545'};border:1px solid #555555;border-radius:0;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;`;
+  return `flex-shrink-0 border border-border-standard rounded-none px-3 py-1.5 text-xs font-semibold cursor-pointer ${active ? 'bg-success text-knox-void' : 'bg-transparent text-success'}`;
 }
 
 function randomSuffix(): string {
@@ -480,7 +465,6 @@ class ModExtractorApp {
       filterHideAdded: false,
       filterHideFailed: false,
       b42Format: false,
-      isMobile: window.innerWidth < MOBILE_BREAKPOINT,
       mobileTab: 'workshop',
       copiedRow: null,
       collectionUrl: '',
@@ -488,11 +472,6 @@ class ModExtractorApp {
       perLineRows: {},
       fetchedAt: null,
     };
-
-    window.addEventListener('resize', () => {
-      const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
-      if (isMobile !== this.state.isMobile) this.setState({ isMobile });
-    });
 
     this.root.addEventListener('click', (e) => this.handleClick(e as MouseEvent));
     this.root.addEventListener('submit', (e) => this.handleFormSubmit(e));
@@ -1009,19 +988,19 @@ class ModExtractorApp {
   private renderLanding(): string {
     const s = this.state;
     const spinner = s.loading
-      ? `<span style="width:18px;height:18px;border:2px solid #000000;border-top-color:transparent;border-radius:50%;display:inline-block;animation:pz-spin 0.7s linear infinite;"></span>`
+      ? `<span class="w-[18px] h-[18px] border-2 border-knox-void border-t-transparent rounded-full inline-block animate-[pz-spin_0.7s_linear_infinite]"></span>`
       : '→';
     return `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;">
-        <div style="max-width:640px;width:100%;text-align:center;">
-          <h1 style="font-family:var(--font-header);font-size:48px;font-weight:400;letter-spacing:-0.02em;color:#e8e8e8;margin:0 0 12px;">PZ MOD EXTRACTOR</h1>
-          <p style="font-size:17px;color:#999999;margin:0 0 32px;line-height:1.5;">Paste a Steam Workshop collection link or ID and get a ready-to-use Project Zomboid mod list.</p>
-          <form class="mx-form" style="display:flex;align-items:stretch;background:#000000;border:1px solid #555555;border-radius:0;overflow:hidden;">
-            <input id="collection-input" type="text" aria-label="Steam collection URL or numeric ID" data-field="inputValue" value="${esc(s.inputValue)}" ${s.loading ? 'disabled' : ''} placeholder="Steam collection URL or numeric ID" style="flex:1;background:transparent;border:none;outline:none;color:#e8e8e8;font-size:16px;padding:18px 20px;" />
-            <button type="submit" ${s.loading ? 'disabled' : ''} aria-label="Convert" style="width:60px;border:none;background:#45b545;color:#000000;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">${spinner}</button>
+      <div class="flex flex-col items-center justify-center min-h-screen p-6">
+        <div class="max-w-[640px] w-full text-center">
+          <h1 class="font-header text-[48px] font-normal tracking-[-0.02em] text-text-base mb-3">PZ MOD EXTRACTOR</h1>
+          <p class="text-[17px] text-text-muted mb-8 leading-[1.5]">Paste a Steam Workshop collection link or ID and get a ready-to-use Project Zomboid mod list.</p>
+          <form class="mx-form flex items-stretch bg-knox-void border border-border-standard rounded-none overflow-hidden">
+            <input id="collection-input" type="text" aria-label="Steam collection URL or numeric ID" data-field="inputValue" value="${esc(s.inputValue)}" ${s.loading ? 'disabled' : ''} placeholder="Steam collection URL or numeric ID" class="flex-1 bg-transparent border-none outline-none text-text-base text-base px-5 py-[18px]" />
+            <button type="submit" ${s.loading ? 'disabled' : ''} aria-label="Convert" class="w-[60px] border-none bg-success text-knox-void text-xl cursor-pointer flex items-center justify-center">${spinner}</button>
           </form>
-          <div role="status" style="min-height:22px;margin-top:14px;font-size:14px;color:#cc2222;">${esc(s.errorMsg)}</div>
-          <button type="button" data-action="import-modlist" style="${TEXT_BTN_STYLE}margin-top:4px;">or import a saved mod list</button>
+          <div role="status" class="min-h-[22px] mt-3.5 text-sm text-danger">${esc(s.errorMsg)}</div>
+          <button type="button" data-action="import-modlist" class="${TEXT_BTN_STYLE} mt-1">or import a saved mod list</button>
         </div>
       </div>
     `;
@@ -1045,22 +1024,22 @@ class ModExtractorApp {
     const candidates =
       isSelected && m.names.length > 1
         ? `
-          <div style="margin-top:8px;">
+          <div class="mt-2">
             ${
               exclusiveHint
-                ? `<div style="font-size:11px;color:#e0b052;background:rgba(224,178,82,0.12);border:1px solid rgba(224,178,82,0.35);border-radius:0;padding:6px 8px;margin-bottom:6px;">⚠ These IDs look like alternative branches of this mod — usually only one should be enabled at a time.</div>`
+                ? `<div class="text-[11px] text-[#e0b052] bg-[#e0b052]/12 border border-[#e0b052]/35 rounded-none px-2 py-1.5 mb-1.5">⚠ These IDs look like alternative branches of this mod — usually only one should be enabled at a time.</div>`
                 : ''
             }
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#999999;margin-bottom:4px;">Select Mod ID(s) to add</div>
-            <div style="display:flex;flex-direction:column;gap:4px;">
+            <div class="text-[10px] font-bold uppercase tracking-[0.04em] text-text-muted mb-1">Select Mod ID(s) to add</div>
+            <div class="flex flex-col gap-1">
               ${m.names
                 .map((name, idx) => {
                   const isAdded = s.curated.some((c) => c.publishedfileid === m.publishedfileid && c.name === name);
                   const isChecked = isAdded || s.checkedNames.has(candidateKey(m.publishedfileid, name));
                   return `
-                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:${isChecked ? '#45b545' : '#e8e8e8'};cursor:${isAdded ? 'default' : 'pointer'};">
-                      <input type="checkbox" data-action="toggle-candidate" data-id="${esc(m.publishedfileid)}" data-idx="${idx}" ${isChecked ? 'checked' : ''} ${isAdded ? 'disabled' : ''} style="accent-color:#45b545;" />
-                      ${esc(name)}${isAdded ? ' <span style="font-size:10px;color:#999999;">(added)</span>' : ''}
+                    <label class="flex items-center gap-1.5 text-xs ${isChecked ? 'text-success' : 'text-text-base'} ${isAdded ? 'cursor-default' : 'cursor-pointer'}">
+                      <input type="checkbox" data-action="toggle-candidate" data-id="${esc(m.publishedfileid)}" data-idx="${idx}" ${isChecked ? 'checked' : ''} ${isAdded ? 'disabled' : ''} class="accent-success" />
+                      ${esc(name)}${isAdded ? ' <span class="text-[10px] text-text-muted">(added)</span>' : ''}
                     </label>
                   `;
                 })
@@ -1071,35 +1050,35 @@ class ModExtractorApp {
         : '';
 
     const thumb = m.previewUrl
-      ? `<img src="${esc(m.previewUrl)}" alt="" style="width:44px;height:44px;flex-shrink:0;border-radius:6px;object-fit:cover;background:#000000;" onerror="this.style.visibility='hidden'" />`
-      : `<div style="width:44px;height:44px;flex-shrink:0;border-radius:6px;background:#000000;border:1px solid #555555;"></div>`;
+      ? `<img src="${esc(m.previewUrl)}" alt="" class="w-11 h-11 flex-shrink-0 rounded-md object-cover bg-knox-void" onerror="this.style.visibility='hidden'" />`
+      : `<div class="w-11 h-11 flex-shrink-0 rounded-md bg-knox-void border border-border-standard"></div>`;
 
     const expanded = isSelected
       ? `
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #555555;display:flex;gap:10px;">
+        <div class="mt-2 pt-2 border-t border-border-standard flex gap-2.5">
           ${thumb}
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:12px;color:#999999;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px;">${renderDescription(m.description)}</div>
-            <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${esc(m.publishedfileid)}" target="_blank" rel="noopener noreferrer" style="font-size:11px;">View on Workshop ↗</a>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs text-text-muted leading-[1.4] line-clamp-2 mb-1">${renderDescription(m.description)}</div>
+            <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${esc(m.publishedfileid)}" target="_blank" rel="noopener noreferrer" class="text-[11px]">View on Workshop ↗</a>
           </div>
         </div>
       `
       : '';
 
     return `
-      <div data-action="select-mod" data-id="${esc(m.publishedfileid)}" style="${rowStyle(isSelected, addableMod)}">
-        <div style="display:flex;gap:10px;align-items:flex-start;width:100%;">
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#e8e8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(m.title)}</div>
-              ${m.names.length > 1 ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;color:#45b545;background:rgba(69,181,69,0.15);border:1px solid #555555;border-radius:0;padding:1px 7px;">${m.names.length} IDs</span>` : ''}
-              <div style="flex-shrink:0;display:flex;align-items:center;gap:6px;margin-left:auto;">
-                ${isAdded ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;color:#999999;background:#000000;border:1px solid #555555;border-radius:0;padding:1px 7px;">Added</span>` : ''}
-                ${addableMod ? `<button type="button" data-action="quick-add" data-id="${esc(m.publishedfileid)}" aria-label="Add ${esc(m.title)}" style="flex-shrink:0;font-size:10px;font-weight:700;color:#000000;background:#45b545;border:none;border-radius:0;padding:2px 8px;cursor:pointer;">+ Add</button>` : ''}
+      <div data-action="select-mod" data-id="${esc(m.publishedfileid)}" class="${rowStyle(isSelected, addableMod)}">
+        <div class="flex gap-2.5 items-start w-full">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5">
+              <div class="flex-1 min-w-0 text-[13px] font-semibold text-text-base whitespace-nowrap overflow-hidden text-ellipsis">${esc(m.title)}</div>
+              ${m.names.length > 1 ? `<span class="flex-shrink-0 text-[10px] font-bold text-success bg-success/15 border border-border-standard rounded-none px-[7px] py-px">${m.names.length} IDs</span>` : ''}
+              <div class="flex-shrink-0 flex items-center gap-1.5 ml-auto">
+                ${isAdded ? `<span class="flex-shrink-0 text-[10px] font-bold text-text-muted bg-knox-void border border-border-standard rounded-none px-[7px] py-px">Added</span>` : ''}
+                ${addableMod ? `<button type="button" data-action="quick-add" data-id="${esc(m.publishedfileid)}" aria-label="Add ${esc(m.title)}" class="flex-shrink-0 text-[10px] font-bold text-knox-void bg-success border-none rounded-none px-2 py-0.5 cursor-pointer">+ Add</button>` : ''}
               </div>
             </div>
-            <div style="font-size:11px;color:#999999;margin-top:2px;">Workshop: ${esc(idsText)}</div>
-            ${statusText ? `<div style="font-size:11px;color:#cc2222;margin-top:2px;">${esc(statusText)}</div>` : ''}
+            <div class="text-[11px] text-text-muted mt-0.5">Workshop: ${esc(idsText)}</div>
+            ${statusText ? `<div class="text-[11px] text-danger mt-0.5">${esc(statusText)}</div>` : ''}
             ${candidates}
             ${expanded}
           </div>
@@ -1114,17 +1093,17 @@ class ModExtractorApp {
     const moveUpDisabled = idx === 0;
     const moveDownDisabled = idx === s.curated.length - 1;
     return `
-      <div draggable="true" data-action="select-curated" data-idx="${idx}" style="${curatedRowStyle(isSelected)}">
-        <span style="cursor:grab;color:#999999;font-size:13px;padding:0 2px;">::</span>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:600;color:#45b545;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(item.name)}</div>
-          <div style="font-size:11px;color:#999999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(item.title)}</div>
+      <div draggable="true" data-action="select-curated" data-idx="${idx}" class="${curatedRowStyle(isSelected)}">
+        <span class="cursor-grab text-text-muted text-[13px] px-0.5">::</span>
+        <div class="flex-1 min-w-0">
+          <div class="text-[13px] font-semibold text-success whitespace-nowrap overflow-hidden text-ellipsis">${esc(item.name)}</div>
+          <div class="text-[11px] text-text-muted whitespace-nowrap overflow-hidden text-ellipsis">${esc(item.title)}</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:2px;">
-          <button type="button" data-action="move-curated-up" data-idx="${idx}" ${moveUpDisabled ? 'disabled' : ''} aria-label="Move up" style="${moveBtnStyle(moveUpDisabled)}">↑</button>
-          <button type="button" data-action="move-curated-down" data-idx="${idx}" ${moveDownDisabled ? 'disabled' : ''} aria-label="Move down" style="${moveBtnStyle(moveDownDisabled)}">↓</button>
+        <div class="flex flex-col gap-0.5">
+          <button type="button" data-action="move-curated-up" data-idx="${idx}" ${moveUpDisabled ? 'disabled' : ''} aria-label="Move up" class="${moveBtnStyle(moveUpDisabled)}">↑</button>
+          <button type="button" data-action="move-curated-down" data-idx="${idx}" ${moveDownDisabled ? 'disabled' : ''} aria-label="Move down" class="${moveBtnStyle(moveDownDisabled)}">↓</button>
         </div>
-        <button type="button" data-action="remove-curated" data-idx="${idx}" aria-label="Remove ${esc(item.name)}" style="background:transparent;border:none;color:#cc2222;font-size:16px;cursor:pointer;padding:0 4px;line-height:1;">×</button>
+        <button type="button" data-action="remove-curated" data-idx="${idx}" aria-label="Remove ${esc(item.name)}" class="bg-transparent border-none text-danger text-base cursor-pointer px-1 leading-none">×</button>
       </div>
     `;
   }
@@ -1138,33 +1117,33 @@ class ModExtractorApp {
 
     const expanded = isOpen
       ? `
-        <div style="border-top:1px solid #555555;padding:12px 14px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:10px;">
-            <button type="button" data-action="toggle-per-line" data-row="${row.key}" aria-pressed="${perLine}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;padding:0;cursor:pointer;">
-              <span style="${b42CheckboxStyle(perLine)}">${perLine ? B42_CHECKMARK_SVG : ''}</span>
-              <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#e8e8e8;">One per line</span>
+        <div class="border-t border-border-standard px-3.5 py-3">
+          <div class="flex items-center justify-between gap-4 mb-2.5">
+            <button type="button" data-action="toggle-per-line" data-row="${row.key}" aria-pressed="${perLine}" class="flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer">
+              <span class="${b42CheckboxStyle(perLine)}">${perLine ? B42_CHECKMARK_SVG : ''}</span>
+              <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-base">One per line</span>
             </button>
             ${
               showB42
-                ? `<button type="button" data-action="toggle-b42" aria-pressed="${s.b42Format}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;padding:0;cursor:pointer;margin-right:auto;">
-                    <span style="${b42CheckboxStyle(s.b42Format)}">${s.b42Format ? B42_CHECKMARK_SVG : ''}</span>
-                    <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#e8e8e8;">B42 format</span>
+                ? `<button type="button" data-action="toggle-b42" aria-pressed="${s.b42Format}" class="flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer mr-auto">
+                    <span class="${b42CheckboxStyle(s.b42Format)}">${s.b42Format ? B42_CHECKMARK_SVG : ''}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-base">B42 format</span>
                   </button>`
                 : ''
             }
-            <button type="button" data-action="copy-row" data-row="${row.key}" style="${rowCopyBtnStyle(isCopied)}">${isCopied ? 'Copied!' : 'Copy'}</button>
+            <button type="button" data-action="copy-row" data-row="${row.key}" class="${rowCopyBtnStyle(isCopied)}">${isCopied ? 'Copied!' : 'Copy'}</button>
           </div>
-          <pre style="margin:0;background:#1c1c1c;border:1px solid #555555;border-radius:0;padding:12px 14px;max-height:280px;overflow:auto;color:#e8e8e8;font-family:var(--font-data);font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all;">${esc(row.blockText)}</pre>
+          <pre class="m-0 bg-header-slate border border-border-standard rounded-none px-3.5 py-3 max-h-[280px] overflow-auto text-text-base font-data text-xs leading-[1.6] whitespace-pre-wrap break-all">${esc(row.blockText)}</pre>
         </div>
       `
       : '';
 
     return `
-      <div style="background:#000000;border:1px solid #555555;border-radius:0;">
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;">
-          <span style="font-size:11px;font-weight:700;color:#999999;text-transform:uppercase;width:118px;flex-shrink:0;">${esc(row.label)}</span>
-          <input id="output-${row.key}" type="text" readonly aria-label="${esc(row.label)} output" value="${esc(row.value)}" style="flex:1;min-width:0;background:transparent;border:none;outline:none;color:#e8e8e8;font-family:var(--font-data);font-size:13px;" />
-          <button type="button" data-action="toggle-open-row" data-row="${row.key}" aria-label="${isOpen ? 'Close' : 'Open'} ${esc(row.label)}" style="${openRowBtnStyle(isOpen)}">${isOpen ? 'Close' : 'Open'}</button>
+      <div class="bg-knox-void border border-border-standard rounded-none">
+        <div class="flex items-center gap-3 px-3.5 py-3">
+          <span class="text-[11px] font-bold text-text-muted uppercase w-[118px] flex-shrink-0">${esc(row.label)}</span>
+          <input id="output-${row.key}" type="text" readonly aria-label="${esc(row.label)} output" value="${esc(row.value)}" class="flex-1 min-w-0 bg-transparent border-none outline-none text-text-base font-data text-[13px]" />
+          <button type="button" data-action="toggle-open-row" data-row="${row.key}" aria-label="${isOpen ? 'Close' : 'Open'} ${esc(row.label)}" class="${openRowBtnStyle(isOpen)}">${isOpen ? 'Close' : 'Open'}</button>
         </div>
         ${expanded}
       </div>
@@ -1178,69 +1157,59 @@ class ModExtractorApp {
     const parsed = s.mods.filter((m) => m.ok && m.names.length > 0).length;
     const failed = total - parsed;
     const spinner = s.loading
-      ? `<span style="width:14px;height:14px;border:2px solid #000000;border-top-color:transparent;border-radius:50%;display:inline-block;animation:pz-spin 0.7s linear infinite;"></span>`
+      ? `<span class="w-3.5 h-3.5 border-2 border-knox-void border-t-transparent rounded-full inline-block animate-[pz-spin_0.7s_linear_infinite]"></span>`
       : '→';
 
-    const mobileTabs = s.isMobile
-      ? `
-        <div style="display:flex;gap:8px;margin-bottom:16px;">
-          <button type="button" data-action="select-tab" data-tab="workshop" style="${tabStyle(s.mobileTab === 'workshop')}">Workshop (${total})</button>
-          <button type="button" data-action="select-tab" data-tab="modid" style="${tabStyle(s.mobileTab === 'modid')}">Mod ID (${s.curated.length})</button>
+    const mobileTabs = `
+      <div class="flex gap-2 mb-4 md:hidden">
+        <button type="button" data-action="select-tab" data-tab="workshop" class="${tabStyle(s.mobileTab === 'workshop')}">Workshop (${total})</button>
+        <button type="button" data-action="select-tab" data-tab="modid" class="${tabStyle(s.mobileTab === 'modid')}">Mod ID (${s.curated.length})</button>
+      </div>
+    `;
+
+    const workshopPanelVisibility = s.mobileTab === 'workshop' ? 'block' : 'hidden';
+    const modIdPanelVisibility = s.mobileTab === 'modid' ? 'block' : 'hidden';
+
+    const workshopPanel = `
+      <div class="${workshopPanelVisibility} md:block bg-knox-void border border-border-standard rounded-none p-4 min-w-0">
+        <div class="text-[13px] font-bold uppercase tracking-[0.04em] text-text-muted mb-2.5">Workshop ID List</div>
+        <div class="flex gap-2 mb-3">
+          <input id="search-input" type="text" aria-label="Filter workshop items" data-field="search" value="${esc(s.search)}" placeholder="Filter…" class="flex-1 min-w-0 box-border bg-knox-void border border-border-standard rounded-none text-text-base text-[13px] px-2.5 py-2" />
+          <button type="button" data-action="toggle-filter" data-filter="multiOnly" title="Multiple IDs only" class="${filterPillStyle(s.filterMultiOnly)}">2+ IDs</button>
+          <button type="button" data-action="toggle-filter" data-filter="hideAdded" title="Hide added" class="${filterPillStyle(s.filterHideAdded)}">Hide added</button>
+          <button type="button" data-action="toggle-filter" data-filter="hideFailed" title="Hide failed" class="${filterPillStyle(s.filterHideFailed)}">Hide failed</button>
         </div>
-      `
-      : '';
-
-    const showWorkshopPanel = !s.isMobile || s.mobileTab === 'workshop';
-    const showModIdPanel = !s.isMobile || s.mobileTab === 'modid';
-
-    const workshopPanel = showWorkshopPanel
-      ? `
-        <div style="background:#000000;border:1px solid #555555;border-radius:0;padding:16px;min-width:0;">
-          <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#999999;margin-bottom:10px;">Workshop ID List</div>
-          <div style="display:flex;gap:8px;margin-bottom:12px;">
-            <input id="search-input" type="text" aria-label="Filter workshop items" data-field="search" value="${esc(s.search)}" placeholder="Filter…" style="flex:1;min-width:0;box-sizing:border-box;background:#000000;border:1px solid #555555;border-radius:0;color:#e8e8e8;font-size:13px;padding:8px 10px;" />
-            <button type="button" data-action="toggle-filter" data-filter="multiOnly" title="Multiple IDs only" style="${filterPillStyle(s.filterMultiOnly)}">2+ IDs</button>
-            <button type="button" data-action="toggle-filter" data-filter="hideAdded" title="Hide added" style="${filterPillStyle(s.filterHideAdded)}">Hide added</button>
-            <button type="button" data-action="toggle-filter" data-filter="hideFailed" title="Hide failed" style="${filterPillStyle(s.filterHideFailed)}">Hide failed</button>
-          </div>
-          <div class="mx-scroll" data-scroll-id="workshop-list" style="display:flex;flex-direction:column;gap:8px;max-height:460px;overflow-y:auto;">
-            ${
-              filtered.length
-                ? filtered.map((m) => this.renderModRow(m)).join('')
-                : `<div style="font-size:12px;color:#999999;padding:20px 4px;text-align:center;">No items match your filters.</div>`
-            }
-          </div>
-        </div>
-      `
-      : '';
-
-    const middleControls = `
-      <div style="display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:8px;padding:8px 0;">
-        <button type="button" data-action="add-selected" ${this.addable() ? '' : 'disabled'} style="${addBtnStyle(this.addable())}">ADD →</button>
-        <button type="button" data-action="remove-selected-curated" ${s.selectedCuratedIdx !== null ? '' : 'disabled'} style="${removeBtnStyle(s.selectedCuratedIdx !== null)}">← REMOVE</button>
-        <div style="display:flex;flex-direction:column;gap:2px;margin-top:8px;align-items:center;">
-          <button type="button" data-action="add-all" style="${TEXT_BTN_STYLE}">Add all</button>
-          <button type="button" data-action="add-all-single" style="${TEXT_BTN_STYLE}">Add single-ID only</button>
-          <button type="button" data-action="clear-all" style="${TEXT_BTN_STYLE}">Clear all</button>
+        <div class="mx-scroll flex flex-col gap-2 max-h-[460px] overflow-y-auto" data-scroll-id="workshop-list">
+          ${
+            filtered.length
+              ? filtered.map((m) => this.renderModRow(m)).join('')
+              : `<div class="text-xs text-text-muted py-5 px-1 text-center">No items match your filters.</div>`
+          }
         </div>
       </div>
     `;
 
-    const modIdPanel = showModIdPanel
-      ? `
-        <div style="background:#000000;border:1px solid #555555;border-radius:0;padding:16px;min-width:0;">
-          <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#999999;margin-bottom:10px;">Mod ID List (${s.curated.length})</div>
-          ${s.curated.length === 0 ? `<div style="font-size:12px;color:#999999;padding:20px 4px;text-align:center;">Select a mod on the left, then ADD.</div>` : ''}
-          <div class="mx-scroll" data-scroll-id="curated-list" style="display:flex;flex-direction:column;gap:8px;max-height:460px;overflow-y:auto;">
-            ${s.curated.map((c, idx) => this.renderCuratedRow(c, idx)).join('')}
-          </div>
+    const middleControls = `
+      <div class="flex flex-col items-stretch justify-center gap-2 py-2">
+        <button type="button" data-action="add-selected" ${this.addable() ? '' : 'disabled'} class="${addBtnStyle(this.addable())}">ADD →</button>
+        <button type="button" data-action="remove-selected-curated" ${s.selectedCuratedIdx !== null ? '' : 'disabled'} class="${removeBtnStyle(s.selectedCuratedIdx !== null)}">← REMOVE</button>
+        <div class="flex flex-col gap-0.5 mt-2 items-center">
+          <button type="button" data-action="add-all" class="${TEXT_BTN_STYLE}">Add all</button>
+          <button type="button" data-action="add-all-single" class="${TEXT_BTN_STYLE}">Add single-ID only</button>
+          <button type="button" data-action="clear-all" class="${TEXT_BTN_STYLE}">Clear all</button>
         </div>
-      `
-      : '';
+      </div>
+    `;
 
-    const transferGridStyle = s.isMobile
-      ? 'display:flex;flex-direction:column;gap:16px;'
-      : 'display:grid;grid-template-columns:1fr 150px 1fr;gap:20px;align-items:start;';
+    const modIdPanel = `
+      <div class="${modIdPanelVisibility} md:block bg-knox-void border border-border-standard rounded-none p-4 min-w-0">
+        <div class="text-[13px] font-bold uppercase tracking-[0.04em] text-text-muted mb-2.5">Mod ID List (${s.curated.length})</div>
+        ${s.curated.length === 0 ? `<div class="text-xs text-text-muted py-5 px-1 text-center">Select a mod on the left, then ADD.</div>` : ''}
+        <div class="mx-scroll flex flex-col gap-2 max-h-[460px] overflow-y-auto" data-scroll-id="curated-list">
+          ${s.curated.map((c, idx) => this.renderCuratedRow(c, idx)).join('')}
+        </div>
+      </div>
+    `;
 
     const outputRowsHtml = this.outputRows()
       .map((r) => this.renderOutputRow(r))
@@ -1248,7 +1217,7 @@ class ModExtractorApp {
 
     const toastHtml = s.copiedRow
       ? `
-        <div role="status" aria-live="polite" style="position:fixed;bottom:24px;right:24px;display:flex;align-items:center;gap:8px;background:#1c1c1c;border:1px solid #45b545;border-radius:0;padding:10px 16px;font-size:13px;font-weight:600;color:#45b545;box-shadow:0 4px 16px rgba(0,0,0,0.5);animation:pz-toast 1.2s ease forwards;z-index:50;">
+        <div role="status" aria-live="polite" class="fixed bottom-6 right-6 flex items-center gap-2 bg-header-slate border border-success rounded-none px-4 py-2.5 text-[13px] font-semibold text-success shadow-[0_4px_16px_rgba(0,0,0,0.5)] animate-[pz-toast_1.2s_ease_forwards] z-50">
           <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5L5 9.5L13 1" stroke="#45b545" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Copied to clipboard
         </div>
@@ -1258,45 +1227,45 @@ class ModExtractorApp {
     return `
       <div>
         ${toastHtml}
-        <div style="display:flex;align-items:center;gap:20px;padding:16px 32px;border-bottom:1px solid #555555;background:#1c1c1c;flex-wrap:wrap;">
-          <button type="button" data-action="reset" aria-label="Start over" style="font-family:var(--font-header);background:transparent;border:none;padding:0;font-weight:400;color:#45b545;font-size:17px;letter-spacing:-0.01em;white-space:nowrap;cursor:pointer;">PZ MOD EXTRACTOR</button>
-          <form class="mx-form" style="flex:1;min-width:220px;display:flex;background:#000000;border:1px solid #555555;border-radius:0;overflow:hidden;">
-            <input id="collection-input" type="text" aria-label="Steam collection URL or numeric ID" data-field="inputValue" value="${esc(s.inputValue)}" ${s.loading ? 'disabled' : ''} placeholder="Steam collection URL or numeric ID" style="flex:1;background:transparent;border:none;outline:none;color:#e8e8e8;font-size:14px;padding:10px 14px;" />
-            <button type="submit" ${s.loading ? 'disabled' : ''} aria-label="Convert" style="width:44px;border:none;background:#45b545;color:#000000;font-size:16px;cursor:pointer;">${spinner}</button>
+        <div class="flex items-center gap-5 px-8 py-4 border-b border-border-standard bg-header-slate flex-wrap">
+          <button type="button" data-action="reset" aria-label="Start over" class="font-header bg-transparent border-none p-0 font-normal text-success text-[17px] tracking-[-0.01em] whitespace-nowrap cursor-pointer">PZ MOD EXTRACTOR</button>
+          <form class="mx-form flex-1 min-w-[220px] flex bg-knox-void border border-border-standard rounded-none overflow-hidden">
+            <input id="collection-input" type="text" aria-label="Steam collection URL or numeric ID" data-field="inputValue" value="${esc(s.inputValue)}" ${s.loading ? 'disabled' : ''} placeholder="Steam collection URL or numeric ID" class="flex-1 bg-transparent border-none outline-none text-text-base text-sm px-3.5 py-2.5" />
+            <button type="submit" ${s.loading ? 'disabled' : ''} aria-label="Convert" class="w-11 border-none bg-success text-knox-void text-base cursor-pointer">${spinner}</button>
           </form>
         </div>
-        <div role="status" style="padding:8px 32px 0;font-size:13px;color:#cc2222;">${esc(s.errorMsg)}</div>
+        <div role="status" class="pt-2 px-8 text-[13px] text-danger">${esc(s.errorMsg)}</div>
 
-        <div style="max-width:1200px;margin:0 auto;padding:24px 32px 64px;">
-          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;">
-            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+        <div class="max-w-[1200px] mx-auto px-8 pt-6 pb-16">
+          <div class="flex items-end justify-between gap-4 flex-wrap mb-[18px]">
+            <div class="flex items-baseline gap-2.5 flex-wrap">
               ${
                 s.collectionUrl
-                  ? `<a href="${esc(s.collectionUrl)}" target="_blank" rel="noopener noreferrer" style="font-size:16px;font-weight:700;">Modlist</a>`
-                  : `<span style="font-size:16px;font-weight:700;color:#e8e8e8;">Modlist</span>`
+                  ? `<a href="${esc(s.collectionUrl)}" target="_blank" rel="noopener noreferrer" class="text-base font-bold">Modlist</a>`
+                  : `<span class="text-base font-bold text-text-base">Modlist</span>`
               }
-              <span style="font-size:13px;color:#999999;">${total} total · <span style="color:#45b545;font-weight:600;">${parsed} loaded</span> · <span style="color:#cc2222;font-weight:600;">${failed} failed</span></span>
+              <span class="text-[13px] text-text-muted">${total} total · <span class="text-success font-semibold">${parsed} loaded</span> · <span class="text-danger font-semibold">${failed} failed</span></span>
             </div>
-            <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;">
-              <div style="display:flex;flex-direction:column;gap:6px;border:1px solid #555555;border-radius:0;padding:8px 10px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
-                  <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#999999;">Copy</span>
-                  <button type="button" data-action="toggle-b42" aria-pressed="${s.b42Format}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;padding:0;cursor:pointer;">
-                    <span style="${b42CheckboxStyle(s.b42Format)}">${s.b42Format ? B42_CHECKMARK_SVG : ''}</span>
-                    <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#e8e8e8;">B42 format</span>
+            <div class="flex items-end gap-3.5 flex-wrap">
+              <div class="flex flex-col gap-1.5 border border-border-standard rounded-none px-2.5 py-2">
+                <div class="flex items-center justify-between gap-4">
+                  <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-muted">Copy</span>
+                  <button type="button" data-action="toggle-b42" aria-pressed="${s.b42Format}" class="flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer">
+                    <span class="${b42CheckboxStyle(s.b42Format)}">${s.b42Format ? B42_CHECKMARK_SVG : ''}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-base">B42 format</span>
                   </button>
                 </div>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                  <button type="button" data-action="copy-row" data-row="workshop" style="${headerCopyBtnStyle(s.copiedRow === 'workshop')}">WorkshopItems</button>
-                  <button type="button" data-action="copy-row" data-row="mods" style="${headerCopyBtnStyle(s.copiedRow === 'mods')}">Mods</button>
-                  <button type="button" data-action="copy-row" data-row="modlist" style="${headerCopyBtnStyle(s.copiedRow === 'modlist')}">ModList</button>
+                <div class="flex gap-1.5 flex-wrap">
+                  <button type="button" data-action="copy-row" data-row="workshop" class="${headerCopyBtnStyle(s.copiedRow === 'workshop')}">WorkshopItems</button>
+                  <button type="button" data-action="copy-row" data-row="mods" class="${headerCopyBtnStyle(s.copiedRow === 'mods')}">Mods</button>
+                  <button type="button" data-action="copy-row" data-row="modlist" class="${headerCopyBtnStyle(s.copiedRow === 'modlist')}">ModList</button>
                 </div>
               </div>
-              <div style="display:flex;flex-direction:column;gap:6px;border:1px solid #555555;border-radius:0;padding:8px 10px;">
-                <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#999999;">Transfer</span>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                  <button type="button" data-action="export-modlist" aria-label="Export modlist as JSON" style="${headerCopyBtnStyle(false)}">Export</button>
-                  <button type="button" data-action="import-modlist" aria-label="Import modlist from JSON" style="${headerCopyBtnStyle(false)}">Import</button>
+              <div class="flex flex-col gap-1.5 border border-border-standard rounded-none px-2.5 py-2">
+                <span class="text-[10px] font-bold uppercase tracking-[0.05em] text-text-muted">Transfer</span>
+                <div class="flex gap-1.5 flex-wrap">
+                  <button type="button" data-action="export-modlist" aria-label="Export modlist as JSON" class="${headerCopyBtnStyle(false)}">Export</button>
+                  <button type="button" data-action="import-modlist" aria-label="Import modlist from JSON" class="${headerCopyBtnStyle(false)}">Import</button>
                 </div>
               </div>
             </div>
@@ -1304,15 +1273,15 @@ class ModExtractorApp {
 
           ${mobileTabs}
 
-          <div style="${transferGridStyle}">
+          <div class="flex flex-col gap-4 md:grid md:grid-cols-[1fr_150px_1fr] md:gap-5 md:items-start">
             ${workshopPanel}
             ${middleControls}
             ${modIdPanel}
           </div>
 
-          <div style="margin-top:32px;">
-            <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#999999;margin-bottom:12px;">Results</div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="mt-8">
+            <div class="text-[13px] font-bold uppercase tracking-[0.04em] text-text-muted mb-3">Results</div>
+            <div class="flex flex-col gap-2.5">
               ${outputRowsHtml}
             </div>
           </div>

@@ -29,7 +29,27 @@ Package manager is pnpm (see `pnpm-lock.yaml` / `pnpm-workspace.yaml`).
 | `pnpm astro check` | Type-check `.astro` files and the project |
 | `pnpm astro -- --help` | Astro CLI help |
 
-There is no test suite or linter configured in this repo.
+There is no automated test suite or linter configured in this repo. Playwright is available as a devDependency for ad hoc browser verification of UI changes (see "Browser verification" below) — it isn't wired up as a test runner.
+
+### Browser verification
+
+Playwright (`playwright` devDependency) drives a real headless Chromium against the dev server so UI changes can be checked visually instead of just type-checked. The browser binary is cached at `~/.cache/ms-playwright` (installed via `npx playwright install chromium`; re-run that if it's missing on a fresh machine/container).
+
+With the dev server running (`astro dev --background`), drive it directly with Node — there's no project script for this, just `require('playwright')` in a throwaway script or inline `node -e`:
+
+```js
+const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await page.goto('http://localhost:4321');
+  await page.waitForSelector('#collection-input', { timeout: 10000 });
+  await page.screenshot({ path: '/tmp/landing.png' });
+  await browser.close();
+})();
+```
+
+Use `page.setViewportSize(...)` to check the `md:` breakpoint behavior (see Styling below), and `page.click`/`page.fill` to drive the flow (input submit, filters, drag-and-drop, etc.) before screenshotting.
 
 ## Architecture
 
@@ -55,7 +75,9 @@ Notable details worth knowing before touching `modExtractor.ts`:
 
 ### Styling
 
-Global design tokens (Project Zomboid-themed palette/fonts) live in `src/styles/theme.css` as CSS custom properties, imported once in `src/layouts/Layout.astro`. `modExtractor.ts` currently renders with inline styles built from JS style-string helper functions (e.g. `rowStyle`, `addBtnStyle`) rather than CSS classes — follow that pattern for new UI in that file rather than introducing a separate stylesheet.
+Tailwind CSS v4 (`@tailwindcss/vite`). `src/styles/global.css` is the single stylesheet entry point (`@import "tailwindcss"; @import "./theme.css";` plus a handful of plain-CSS rules — keyframes, link colors, `.mx-scroll` scrollbar theming — that have no Tailwind utility equivalent), imported once in `src/layouts/Layout.astro`. Project Zomboid-themed palette/fonts live in `src/styles/theme.css` as a Tailwind `@theme` block, so each token is both a CSS custom property (`var(--color-knox-void)`) and a utility class (`bg-knox-void`, `font-header`, ...).
+
+`modExtractor.ts` renders its UI with Tailwind utility classes in `class="..."` attributes rather than inline `style`. Conditional/stateful styling (selected/active/disabled row and button states) uses small helper functions that return a class-name string based on state (e.g. `rowStyle(selected, addable)`, `addBtnStyle(enabled)`) — follow that pattern for new conditional UI rather than writing `style="..."` by hand. The one exception is `bbRenderNode`'s BBCode-to-HTML rendering: those fragments render arbitrary Steam Workshop description content, so they keep inline styles (Tailwind can't statically discover classes generated from dynamic content).
 
 ## Documentation
 
