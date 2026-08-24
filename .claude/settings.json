@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(pnpm astro *)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:docs.astro.build)"
     ]
   }
 }

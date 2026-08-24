@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         PZ Workshop Collection → Mod String Converter
+// @name         Project Zomboid Mod List Generator
 // @namespace    pzmodmanager
 // @version      1.0.0
-// @description  Convert a Steam Workshop collection into Project Zomboid WorkshopItems=/Mods= strings. Lets you pick which Mod ID to use when a workshop item declares more than one.
+// @description  Turns a Steam Workshop collection into a ready-to-paste Project Zomboid mod list. If a mod offers more than one Mod ID, you get to pick which one to use.
 // @author       pzmodmanager
 // @match        https://steamcommunity.com/sharedfiles/filedetails/*
 // @match        https://steamcommunity.com/workshop/filedetails/*
@@ -10,6 +10,8 @@
 // @connect      api.steampowered.com
 // @run-at       document-idle
 // ==/UserScript==
+
+// Based on: https://gist.github.com/Saturate/1519244dee074f3b6afdea349580f0e0?permalink_comment_id=5004466#gistcomment-5004466
 
 (function () {
   "use strict";
