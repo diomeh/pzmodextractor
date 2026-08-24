@@ -21,8 +21,7 @@ interface OutputRow {
   key: string;
   label: string;
   value: string;
-  showToggle: boolean;
-  copyText: string;
+  blockText: string;
 }
 
 type Screen = 'landing' | 'results';
@@ -48,6 +47,22 @@ interface AppState {
   mobileTab: 'workshop' | 'modid';
   copiedRow: string | null;
   collectionUrl: string;
+  openRows: Record<string, boolean>;
+  perLineRows: Record<string, boolean>;
+  fetchedAt: string | null;
+}
+
+const EXPORT_SCHEMA_VERSION = 1;
+
+interface ModExtractorExportPayload {
+  schemaVersion: number;
+  exportedAt: string;
+  fetchedAt: string | null;
+  collectionUrl: string;
+  inputValue: string;
+  b42Format: boolean;
+  mods: ModEntry[];
+  curated: CuratedItem[];
 }
 
 function esc(value: string): string {
@@ -297,12 +312,23 @@ function moveBtnStyle(disabled: boolean): string {
   return `background:transparent;border:none;color:#999999;font-size:11px;cursor:${disabled ? 'not-allowed' : 'pointer'};opacity:${disabled ? '0.3' : '1'};padding:0 4px;`;
 }
 
-function copyStyleFor(copied: boolean): string {
-  return `flex-shrink:0;background:${copied ? '#45b545' : 'transparent'};color:${copied ? '#000000' : '#45b545'};border:1px solid #555555;border-radius:0;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;`;
+function headerCopyBtnStyle(active: boolean): string {
+  return `background:${active ? 'rgba(69,181,69,0.15)' : '#000000'};color:${active ? '#45b545' : '#999999'};border:1px solid ${active ? '#45b545' : '#555555'};border-radius:0;padding:7px 13px;font-size:11px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;white-space:nowrap;cursor:pointer;transition:background 0.12s,border-color 0.12s,color 0.12s;`;
 }
 
-function toggleStyleFor(active: boolean): string {
-  return `flex-shrink:0;font-size:11px;font-weight:600;padding:5px 10px;border-radius:0;cursor:pointer;border:1px solid ${active ? '#45b545' : '#555555'};background:${active ? 'rgba(69,181,69,0.15)' : 'transparent'};color:${active ? '#45b545' : '#999999'};`;
+function b42CheckboxStyle(active: boolean): string {
+  return `width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid ${active ? '#45b545' : '#555555'};border-radius:0;background:${active ? '#45b545' : 'transparent'};transition:background 0.12s,border-color 0.12s;`;
+}
+
+const B42_CHECKMARK_SVG =
+  '<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#000000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function openRowBtnStyle(active: boolean): string {
+  return `flex-shrink:0;background:${active ? 'rgba(69,181,69,0.15)' : 'transparent'};color:${active ? '#45b545' : '#999999'};border:1px solid #555555;border-radius:0;padding:6px 12px;font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;transition:background 0.12s,color 0.12s;`;
+}
+
+function rowCopyBtnStyle(active: boolean): string {
+  return `flex-shrink:0;background:${active ? '#45b545' : 'transparent'};color:${active ? '#000000' : '#45b545'};border:1px solid #555555;border-radius:0;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;`;
 }
 
 function randomSuffix(): string {
@@ -329,6 +355,106 @@ function toCollectionUrl(input: string): string {
     // not an absolute URL
   }
   return '';
+}
+
+function buildExportPayload(state: AppState): ModExtractorExportPayload {
+  return {
+    schemaVersion: EXPORT_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    fetchedAt: state.fetchedAt,
+    collectionUrl: state.collectionUrl,
+    inputValue: state.inputValue,
+    b42Format: state.b42Format,
+    mods: state.mods,
+    curated: state.curated,
+  };
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+function buildExportFilename(state: AppState): string {
+  const idMatch = state.collectionUrl.match(/[?&]id=(\d+)/);
+  const fallbackId = /^\d+$/.test(state.inputValue.trim()) ? state.inputValue.trim() : null;
+  const id = idMatch?.[1] || fallbackId || 'modlist';
+  const now = new Date();
+  const stamp =
+    `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}` +
+    `-${pad2(now.getHours())}${pad2(now.getMinutes())}`;
+  return `pz-modlist-${id}-${stamp}.json`;
+}
+
+function isModEntry(value: unknown): value is ModEntry {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.publishedfileid === 'string' &&
+    typeof v.title === 'string' &&
+    typeof v.previewUrl === 'string' &&
+    typeof v.description === 'string' &&
+    typeof v.ok === 'boolean' &&
+    Array.isArray(v.ids) &&
+    v.ids.every((x) => typeof x === 'string') &&
+    Array.isArray(v.names) &&
+    v.names.every((x) => typeof x === 'string')
+  );
+}
+
+function isCuratedItem(value: unknown): value is CuratedItem {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.key === 'string' &&
+    typeof v.publishedfileid === 'string' &&
+    typeof v.title === 'string' &&
+    typeof v.name === 'string'
+  );
+}
+
+function parseImportPayload(
+  raw: unknown,
+): { ok: true; payload: ModExtractorExportPayload } | { ok: false; error: string } {
+  if (!raw || typeof raw !== 'object') {
+    return { ok: false, error: "This doesn't look like a PZ Mod Extractor export file." };
+  }
+  const v = raw as Record<string, unknown>;
+
+  if (typeof v.schemaVersion !== 'number') {
+    return { ok: false, error: "This doesn't look like a PZ Mod Extractor export file." };
+  }
+  if (v.schemaVersion !== EXPORT_SCHEMA_VERSION) {
+    return { ok: false, error: "This file was exported from an incompatible version of this tool and can't be imported." };
+  }
+  if (!Array.isArray(v.mods) || !v.mods.every(isModEntry)) {
+    return { ok: false, error: 'Import file is malformed (invalid mod entry).' };
+  }
+  if (!Array.isArray(v.curated) || !v.curated.every(isCuratedItem)) {
+    return { ok: false, error: 'Import file is malformed (invalid curated entry).' };
+  }
+  if (
+    typeof v.collectionUrl !== 'string' ||
+    typeof v.inputValue !== 'string' ||
+    typeof v.b42Format !== 'boolean' ||
+    typeof v.exportedAt !== 'string' ||
+    (v.fetchedAt !== null && typeof v.fetchedAt !== 'string')
+  ) {
+    return { ok: false, error: 'Import file is missing required fields.' };
+  }
+
+  return {
+    ok: true,
+    payload: {
+      schemaVersion: v.schemaVersion,
+      exportedAt: v.exportedAt,
+      fetchedAt: v.fetchedAt as string | null,
+      collectionUrl: v.collectionUrl,
+      inputValue: v.inputValue,
+      b42Format: v.b42Format,
+      mods: v.mods,
+      curated: v.curated,
+    },
+  };
 }
 
 class ModExtractorApp {
@@ -358,6 +484,9 @@ class ModExtractorApp {
       mobileTab: 'workshop',
       copiedRow: null,
       collectionUrl: '',
+      openRows: {},
+      perLineRows: {},
+      fetchedAt: null,
     };
 
     window.addEventListener('resize', () => {
@@ -404,28 +533,19 @@ class ModExtractorApp {
     const modsValue = s.curated.map((c) => (s.b42Format ? '\\' : '') + c.name).join(';');
     const modListValue = s.curated.map((c, i) => `${i + 1}. ${c.title} (${c.name})`).join(', ');
     return [
-      {
-        key: 'workshop',
-        label: 'WorkshopItems=',
-        value: workshopItemsValue,
-        showToggle: false,
-        copyText: 'WorkshopItems=' + workshopItemsValue,
-      },
-      {
-        key: 'mods',
-        label: 'Mods=',
-        value: modsValue,
-        showToggle: true,
-        copyText: 'Mods=' + modsValue,
-      },
-      {
-        key: 'modlist',
-        label: 'ModList=',
-        value: modListValue,
-        showToggle: false,
-        copyText: 'ModList=' + modListValue,
-      },
+      this.buildOutputRow('workshop', 'WorkshopItems=', workshopItemsValue, ';'),
+      this.buildOutputRow('mods', 'Mods=', modsValue, ';'),
+      this.buildOutputRow('modlist', 'ModList=', modListValue, ', '),
     ];
+  }
+
+  private buildOutputRow(key: string, label: string, value: string, sep: string): OutputRow {
+    const perLine = !!this.state.perLineRows[key];
+    const items = value ? value.split(sep) : [];
+    const blockText = perLine
+      ? `${label}\n${items.map((item, i) => (i < items.length - 1 ? item + sep.trim() : item)).join('\n')}`
+      : label + value;
+    return { key, label, value, blockText };
   }
 
   // ---- state mutators ----
@@ -541,6 +661,9 @@ class ModExtractorApp {
       mobileTab: 'workshop',
       copiedRow: null,
       collectionUrl: '',
+      openRows: {},
+      perLineRows: {},
+      fetchedAt: null,
     });
   }
 
@@ -569,10 +692,18 @@ class ModExtractorApp {
     else this.setState({ filterHideFailed: !this.state.filterHideFailed });
   }
 
+  private toggleOpenRow(key: string): void {
+    this.setState({ openRows: { ...this.state.openRows, [key]: !this.state.openRows[key] } });
+  }
+
+  private togglePerLine(key: string): void {
+    this.setState({ perLineRows: { ...this.state.perLineRows, [key]: !this.state.perLineRows[key] } });
+  }
+
   private copyRow(key: string): void {
     const row = this.outputRows().find((r) => r.key === key);
     if (!row) return;
-    const text = row.copyText;
+    const text = row.blockText;
 
     const showCopied = () => {
       this.setState({ copiedRow: key });
@@ -602,6 +733,69 @@ class ModExtractorApp {
     } else {
       fallback();
     }
+  }
+
+  private exportModlist(): void {
+    const payload = buildExportPayload(this.state);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = buildExportFilename(this.state);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  private triggerImport(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.style.display = 'none';
+    input.addEventListener('change', () => {
+      const file = input.files?.[0];
+      input.remove();
+      if (!file) return;
+      void this.handleImportFile(file);
+    });
+    document.body.appendChild(input);
+    input.click();
+  }
+
+  private async handleImportFile(file: File): Promise<void> {
+    let raw: unknown;
+    try {
+      raw = JSON.parse(await file.text());
+    } catch {
+      this.setState({ errorMsg: 'Could not read that file — it may not be valid JSON.' });
+      return;
+    }
+    const result = parseImportPayload(raw);
+    if (!result.ok) {
+      this.setState({ errorMsg: result.error });
+      return;
+    }
+    this.applyImportedPayload(result.payload);
+  }
+
+  private applyImportedPayload(payload: ModExtractorExportPayload): void {
+    this.setState({
+      loading: false,
+      errorMsg: '',
+      screen: 'results',
+      mods: payload.mods,
+      selectedModId: null,
+      selectedCandidateIdx: 0,
+      checkedNames: new Set(),
+      curated: payload.curated,
+      selectedCuratedIdx: null,
+      search: '',
+      collectionUrl: payload.collectionUrl,
+      inputValue: payload.inputValue,
+      b42Format: payload.b42Format,
+      fetchedAt: payload.fetchedAt,
+    });
   }
 
   private async submit(): Promise<void> {
@@ -640,6 +834,7 @@ class ModExtractorApp {
         selectedCuratedIdx: null,
         search: '',
         collectionUrl: toCollectionUrl(value),
+        fetchedAt: new Date().toISOString(),
       });
     } catch (err) {
       this.setState({
@@ -703,8 +898,20 @@ class ModExtractorApp {
       case 'toggle-b42':
         this.setState({ b42Format: !this.state.b42Format });
         break;
+      case 'toggle-open-row':
+        this.toggleOpenRow(actionEl.dataset.row as string);
+        break;
+      case 'toggle-per-line':
+        this.togglePerLine(actionEl.dataset.row as string);
+        break;
       case 'copy-row':
         this.copyRow(actionEl.dataset.row as string);
+        break;
+      case 'export-modlist':
+        this.exportModlist();
+        break;
+      case 'import-modlist':
+        this.triggerImport();
         break;
       case 'reset':
         this.resetToLanding();
@@ -808,12 +1015,13 @@ class ModExtractorApp {
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;">
         <div style="max-width:640px;width:100%;text-align:center;">
           <h1 style="font-family:var(--font-header);font-size:48px;font-weight:400;letter-spacing:-0.02em;color:#e8e8e8;margin:0 0 12px;">PZ MOD EXTRACTOR</h1>
-          <p style="font-size:17px;color:#999999;margin:0 0 32px;line-height:1.5;">Paste a Steam Workshop collection link or ID to generate a Project Zomboid mod string.</p>
+          <p style="font-size:17px;color:#999999;margin:0 0 32px;line-height:1.5;">Paste a Steam Workshop collection link or ID and get a ready-to-use Project Zomboid mod list.</p>
           <form class="mx-form" style="display:flex;align-items:stretch;background:#000000;border:1px solid #555555;border-radius:0;overflow:hidden;">
             <input id="collection-input" type="text" aria-label="Steam collection URL or numeric ID" data-field="inputValue" value="${esc(s.inputValue)}" ${s.loading ? 'disabled' : ''} placeholder="Steam collection URL or numeric ID" style="flex:1;background:transparent;border:none;outline:none;color:#e8e8e8;font-size:16px;padding:18px 20px;" />
             <button type="submit" ${s.loading ? 'disabled' : ''} aria-label="Convert" style="width:60px;border:none;background:#45b545;color:#000000;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;">${spinner}</button>
           </form>
           <div role="status" style="min-height:22px;margin-top:14px;font-size:14px;color:#cc2222;">${esc(s.errorMsg)}</div>
+          <button type="button" data-action="import-modlist" style="${TEXT_BTN_STYLE}margin-top:4px;">or import a saved mod list</button>
         </div>
       </div>
     `;
@@ -863,15 +1071,16 @@ class ModExtractorApp {
         : '';
 
     const thumb = m.previewUrl
-      ? `<img src="${esc(m.previewUrl)}" alt="" style="width:72px;height:72px;flex-shrink:0;border-radius:6px;object-fit:cover;background:#000000;" onerror="this.style.visibility='hidden'" />`
-      : `<div style="width:72px;height:72px;flex-shrink:0;border-radius:6px;background:#000000;border:1px solid #555555;"></div>`;
+      ? `<img src="${esc(m.previewUrl)}" alt="" style="width:44px;height:44px;flex-shrink:0;border-radius:6px;object-fit:cover;background:#000000;" onerror="this.style.visibility='hidden'" />`
+      : `<div style="width:44px;height:44px;flex-shrink:0;border-radius:6px;background:#000000;border:1px solid #555555;"></div>`;
 
     const expanded = isSelected
       ? `
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #555555;display:flex;gap:12px;">
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #555555;display:flex;gap:10px;">
           ${thumb}
           <div style="flex:1;min-width:0;">
-            <div class="mx-scroll" data-scroll-id="desc-${esc(m.publishedfileid)}" style="font-size:12px;color:#999999;line-height:1.5;padding-right:4px;max-height:220px;overflow-y:auto;">${renderDescription(m.description)}</div>
+            <div style="font-size:12px;color:#999999;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px;">${renderDescription(m.description)}</div>
+            <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${esc(m.publishedfileid)}" target="_blank" rel="noopener noreferrer" style="font-size:11px;">View on Workshop ↗</a>
           </div>
         </div>
       `
@@ -885,7 +1094,6 @@ class ModExtractorApp {
               <div style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#e8e8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(m.title)}</div>
               ${m.names.length > 1 ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;color:#45b545;background:rgba(69,181,69,0.15);border:1px solid #555555;border-radius:0;padding:1px 7px;">${m.names.length} IDs</span>` : ''}
               <div style="flex-shrink:0;display:flex;align-items:center;gap:6px;margin-left:auto;">
-                <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=${esc(m.publishedfileid)}" target="_blank" rel="noopener noreferrer" data-action="view-workshop" aria-label="View ${esc(m.title)} on Workshop" title="View on Workshop" style="flex-shrink:0;font-size:10px;font-weight:700;color:#999999;background:#000000;border:1px solid #555555;border-radius:0;padding:1px 7px;">↗</a>
                 ${isAdded ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;color:#999999;background:#000000;border:1px solid #555555;border-radius:0;padding:1px 7px;">Added</span>` : ''}
                 ${addableMod ? `<button type="button" data-action="quick-add" data-id="${esc(m.publishedfileid)}" aria-label="Add ${esc(m.title)}" style="flex-shrink:0;font-size:10px;font-weight:700;color:#000000;background:#45b545;border:none;border-radius:0;padding:2px 8px;cursor:pointer;">+ Add</button>` : ''}
               </div>
@@ -922,16 +1130,43 @@ class ModExtractorApp {
   }
 
   private renderOutputRow(row: OutputRow): string {
-    const copied = this.state.copiedRow === row.key;
-    const toggle = row.showToggle
-      ? `<button type="button" data-action="toggle-b42" style="${toggleStyleFor(this.state.b42Format)}">B42 format</button>`
+    const s = this.state;
+    const isOpen = !!s.openRows[row.key];
+    const perLine = !!s.perLineRows[row.key];
+    const isCopied = s.copiedRow === row.key;
+    const showB42 = row.key === 'mods';
+
+    const expanded = isOpen
+      ? `
+        <div style="border-top:1px solid #555555;padding:12px 14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:10px;">
+            <button type="button" data-action="toggle-per-line" data-row="${row.key}" aria-pressed="${perLine}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;padding:0;cursor:pointer;">
+              <span style="${b42CheckboxStyle(perLine)}">${perLine ? B42_CHECKMARK_SVG : ''}</span>
+              <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#e8e8e8;">One per line</span>
+            </button>
+            ${
+              showB42
+                ? `<button type="button" data-action="toggle-b42" aria-pressed="${s.b42Format}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;padding:0;cursor:pointer;margin-right:auto;">
+                    <span style="${b42CheckboxStyle(s.b42Format)}">${s.b42Format ? B42_CHECKMARK_SVG : ''}</span>
+                    <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#e8e8e8;">B42 format</span>
+                  </button>`
+                : ''
+            }
+            <button type="button" data-action="copy-row" data-row="${row.key}" style="${rowCopyBtnStyle(isCopied)}">${isCopied ? 'Copied!' : 'Copy'}</button>
+          </div>
+          <pre style="margin:0;background:#1c1c1c;border:1px solid #555555;border-radius:0;padding:12px 14px;max-height:280px;overflow:auto;color:#e8e8e8;font-family:var(--font-data);font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all;">${esc(row.blockText)}</pre>
+        </div>
+      `
       : '';
+
     return `
-      <div style="display:flex;align-items:center;gap:12px;background:#000000;border:1px solid #555555;border-radius:0;padding:12px 14px;">
-        <span style="font-size:11px;font-weight:700;color:#999999;text-transform:uppercase;width:118px;flex-shrink:0;">${esc(row.label)}</span>
-        <input id="output-${row.key}" type="text" readonly aria-label="${esc(row.label)} output" value="${esc(row.value)}" style="flex:1;min-width:0;background:transparent;border:none;outline:none;color:#e8e8e8;font-family:var(--font-data);font-size:13px;" />
-        ${toggle}
-        <button type="button" data-action="copy-row" data-row="${row.key}" style="${copyStyleFor(copied)}">${copied ? 'Copied!' : 'Copy'}</button>
+      <div style="background:#000000;border:1px solid #555555;border-radius:0;">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;">
+          <span style="font-size:11px;font-weight:700;color:#999999;text-transform:uppercase;width:118px;flex-shrink:0;">${esc(row.label)}</span>
+          <input id="output-${row.key}" type="text" readonly aria-label="${esc(row.label)} output" value="${esc(row.value)}" style="flex:1;min-width:0;background:transparent;border:none;outline:none;color:#e8e8e8;font-family:var(--font-data);font-size:13px;" />
+          <button type="button" data-action="toggle-open-row" data-row="${row.key}" aria-label="${isOpen ? 'Close' : 'Open'} ${esc(row.label)}" style="${openRowBtnStyle(isOpen)}">${isOpen ? 'Close' : 'Open'}</button>
+        </div>
+        ${expanded}
       </div>
     `;
   }
@@ -983,10 +1218,11 @@ class ModExtractorApp {
       <div style="display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:8px;padding:8px 0;">
         <button type="button" data-action="add-selected" ${this.addable() ? '' : 'disabled'} style="${addBtnStyle(this.addable())}">ADD →</button>
         <button type="button" data-action="remove-selected-curated" ${s.selectedCuratedIdx !== null ? '' : 'disabled'} style="${removeBtnStyle(s.selectedCuratedIdx !== null)}">← REMOVE</button>
-        <div style="height:1px;background:#555555;margin:10px 0;"></div>
-        <button type="button" data-action="add-all" style="${TEXT_BTN_STYLE}">Add all</button>
-        <button type="button" data-action="add-all-single" style="${TEXT_BTN_STYLE}">Add single-ID only</button>
-        <button type="button" data-action="clear-all" style="${TEXT_BTN_STYLE}">Clear all</button>
+        <div style="display:flex;flex-direction:column;gap:2px;margin-top:8px;align-items:center;">
+          <button type="button" data-action="add-all" style="${TEXT_BTN_STYLE}">Add all</button>
+          <button type="button" data-action="add-all-single" style="${TEXT_BTN_STYLE}">Add single-ID only</button>
+          <button type="button" data-action="clear-all" style="${TEXT_BTN_STYLE}">Clear all</button>
+        </div>
       </div>
     `;
 
@@ -1010,8 +1246,18 @@ class ModExtractorApp {
       .map((r) => this.renderOutputRow(r))
       .join('');
 
+    const toastHtml = s.copiedRow
+      ? `
+        <div role="status" aria-live="polite" style="position:fixed;bottom:24px;right:24px;display:flex;align-items:center;gap:8px;background:#1c1c1c;border:1px solid #45b545;border-radius:0;padding:10px 16px;font-size:13px;font-weight:600;color:#45b545;box-shadow:0 4px 16px rgba(0,0,0,0.5);animation:pz-toast 1.2s ease forwards;z-index:50;">
+          <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5L5 9.5L13 1" stroke="#45b545" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Copied to clipboard
+        </div>
+      `
+      : '';
+
     return `
       <div>
+        ${toastHtml}
         <div style="display:flex;align-items:center;gap:20px;padding:16px 32px;border-bottom:1px solid #555555;background:#1c1c1c;flex-wrap:wrap;">
           <button type="button" data-action="reset" aria-label="Start over" style="font-family:var(--font-header);background:transparent;border:none;padding:0;font-weight:400;color:#45b545;font-size:17px;letter-spacing:-0.01em;white-space:nowrap;cursor:pointer;">PZ MOD EXTRACTOR</button>
           <form class="mx-form" style="flex:1;min-width:220px;display:flex;background:#000000;border:1px solid #555555;border-radius:0;overflow:hidden;">
@@ -1022,16 +1268,37 @@ class ModExtractorApp {
         <div role="status" style="padding:8px 32px 0;font-size:13px;color:#cc2222;">${esc(s.errorMsg)}</div>
 
         <div style="max-width:1200px;margin:0 auto;padding:24px 32px 64px;">
-          <div style="display:flex;align-items:center;gap:28px;flex-wrap:wrap;margin-bottom:22px;">
-            ${
-              s.collectionUrl
-                ? `<a href="${esc(s.collectionUrl)}" target="_blank" rel="noopener noreferrer" style="font-size:16px;font-weight:700;">Modlist</a>`
-                : `<span style="font-size:16px;font-weight:700;color:#e8e8e8;">Modlist</span>`
-            }
-            <div style="display:flex;gap:20px;flex-wrap:wrap;">
-              <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:#999999;">Total</span><div style="font-family:var(--font-data);font-size:16px;font-weight:700;color:#e8e8e8;">${total}</div></div>
-              <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:#999999;">Loaded</span><div style="font-family:var(--font-data);font-size:16px;font-weight:700;color:#45b545;">${parsed}</div></div>
-              <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:#999999;">Failed</span><div style="font-family:var(--font-data);font-size:16px;font-weight:700;color:#cc2222;">${failed}</div></div>
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;">
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+              ${
+                s.collectionUrl
+                  ? `<a href="${esc(s.collectionUrl)}" target="_blank" rel="noopener noreferrer" style="font-size:16px;font-weight:700;">Modlist</a>`
+                  : `<span style="font-size:16px;font-weight:700;color:#e8e8e8;">Modlist</span>`
+              }
+              <span style="font-size:13px;color:#999999;">${total} total · <span style="color:#45b545;font-weight:600;">${parsed} loaded</span> · <span style="color:#cc2222;font-weight:600;">${failed} failed</span></span>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;">
+              <div style="display:flex;flex-direction:column;gap:6px;border:1px solid #555555;border-radius:0;padding:8px 10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+                  <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#999999;">Copy</span>
+                  <button type="button" data-action="toggle-b42" aria-pressed="${s.b42Format}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;padding:0;cursor:pointer;">
+                    <span style="${b42CheckboxStyle(s.b42Format)}">${s.b42Format ? B42_CHECKMARK_SVG : ''}</span>
+                    <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#e8e8e8;">B42 format</span>
+                  </button>
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <button type="button" data-action="copy-row" data-row="workshop" style="${headerCopyBtnStyle(s.copiedRow === 'workshop')}">WorkshopItems</button>
+                  <button type="button" data-action="copy-row" data-row="mods" style="${headerCopyBtnStyle(s.copiedRow === 'mods')}">Mods</button>
+                  <button type="button" data-action="copy-row" data-row="modlist" style="${headerCopyBtnStyle(s.copiedRow === 'modlist')}">ModList</button>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;border:1px solid #555555;border-radius:0;padding:8px 10px;">
+                <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#999999;">Transfer</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <button type="button" data-action="export-modlist" aria-label="Export modlist as JSON" style="${headerCopyBtnStyle(false)}">Export</button>
+                  <button type="button" data-action="import-modlist" aria-label="Import modlist from JSON" style="${headerCopyBtnStyle(false)}">Import</button>
+                </div>
+              </div>
             </div>
           </div>
 

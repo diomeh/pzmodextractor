@@ -26,6 +26,23 @@ import Layout from '../layouts/Layout.astro';
 		}
 	}
 
+	@keyframes pz-toast {
+		0% {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+		10% {
+			opacity: 1;
+			transform: translateY(0);
+		}
+		85% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+		}
+	}
+
 	a {
 		color: var(--color-success);
 		text-decoration: none;
