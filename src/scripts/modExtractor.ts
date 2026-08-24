@@ -807,7 +807,7 @@ class ModExtractorApp {
     return `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;">
         <div style="max-width:640px;width:100%;text-align:center;">
-          <h1 style="font-size:48px;font-weight:800;letter-spacing:-0.02em;color:#e8e8e8;margin:0 0 12px;">PZ MOD EXTRACTOR</h1>
+          <h1 style="font-family:var(--font-header);font-size:48px;font-weight:400;letter-spacing:-0.02em;color:#e8e8e8;margin:0 0 12px;">PZ MOD EXTRACTOR</h1>
           <p style="font-size:17px;color:#999999;margin:0 0 32px;line-height:1.5;">Paste a Steam Workshop collection link or ID to generate a Project Zomboid mod string.</p>
           <form class="mx-form" style="display:flex;align-items:stretch;background:#000000;border:1px solid #555555;border-radius:0;overflow:hidden;">
             <input id="collection-input" type="text" aria-label="Steam collection URL or numeric ID" data-field="inputValue" value="${esc(s.inputValue)}" ${s.loading ? 'disabled' : ''} placeholder="Steam collection URL or numeric ID" style="flex:1;background:transparent;border:none;outline:none;color:#e8e8e8;font-size:16px;padding:18px 20px;" />
@@ -929,7 +929,7 @@ class ModExtractorApp {
     return `
       <div style="display:flex;align-items:center;gap:12px;background:#000000;border:1px solid #555555;border-radius:0;padding:12px 14px;">
         <span style="font-size:11px;font-weight:700;color:#999999;text-transform:uppercase;width:118px;flex-shrink:0;">${esc(row.label)}</span>
-        <input id="output-${row.key}" type="text" readonly aria-label="${esc(row.label)} output" value="${esc(row.value)}" style="flex:1;min-width:0;background:transparent;border:none;outline:none;color:#e8e8e8;font-family:'SF Mono',Consolas,monospace;font-size:13px;" />
+        <input id="output-${row.key}" type="text" readonly aria-label="${esc(row.label)} output" value="${esc(row.value)}" style="flex:1;min-width:0;background:transparent;border:none;outline:none;color:#e8e8e8;font-family:var(--font-data);font-size:13px;" />
         ${toggle}
         <button type="button" data-action="copy-row" data-row="${row.key}" style="${copyStyleFor(copied)}">${copied ? 'Copied!' : 'Copy'}</button>
       </div>
@@ -1013,7 +1013,7 @@ class ModExtractorApp {
     return `
       <div>
         <div style="display:flex;align-items:center;gap:20px;padding:16px 32px;border-bottom:1px solid #555555;background:#1c1c1c;flex-wrap:wrap;">
-          <button type="button" data-action="reset" aria-label="Start over" style="background:transparent;border:none;padding:0;font-weight:800;color:#45b545;font-size:17px;letter-spacing:-0.01em;white-space:nowrap;cursor:pointer;">PZ MOD EXTRACTOR</button>
+          <button type="button" data-action="reset" aria-label="Start over" style="font-family:var(--font-header);background:transparent;border:none;padding:0;font-weight:400;color:#45b545;font-size:17px;letter-spacing:-0.01em;white-space:nowrap;cursor:pointer;">PZ MOD EXTRACTOR</button>
           <form class="mx-form" style="flex:1;min-width:220px;display:flex;background:#000000;border:1px solid #555555;border-radius:0;overflow:hidden;">
             <input id="collection-input" type="text" aria-label="Steam collection URL or numeric ID" data-field="inputValue" value="${esc(s.inputValue)}" ${s.loading ? 'disabled' : ''} placeholder="Steam collection URL or numeric ID" style="flex:1;background:transparent;border:none;outline:none;color:#e8e8e8;font-size:14px;padding:10px 14px;" />
             <button type="submit" ${s.loading ? 'disabled' : ''} aria-label="Convert" style="width:44px;border:none;background:#45b545;color:#000000;font-size:16px;cursor:pointer;">${spinner}</button>
@@ -1029,9 +1029,9 @@ class ModExtractorApp {
                 : `<span style="font-size:16px;font-weight:700;color:#e8e8e8;">Modlist</span>`
             }
             <div style="display:flex;gap:20px;flex-wrap:wrap;">
-              <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:#999999;">Total</span><div style="font-size:16px;font-weight:700;color:#e8e8e8;">${total}</div></div>
-              <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:#999999;">Loaded</span><div style="font-size:16px;font-weight:700;color:#45b545;">${parsed}</div></div>
-              <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:#999999;">Failed</span><div style="font-size:16px;font-weight:700;color:#cc2222;">${failed}</div></div>
+              <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:#999999;">Total</span><div style="font-family:var(--font-data);font-size:16px;font-weight:700;color:#e8e8e8;">${total}</div></div>
+              <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:#999999;">Loaded</span><div style="font-family:var(--font-data);font-size:16px;font-weight:700;color:#45b545;">${parsed}</div></div>
+              <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:#999999;">Failed</span><div style="font-family:var(--font-data);font-size:16px;font-weight:700;color:#cc2222;">${failed}</div></div>
             </div>
           </div>
 

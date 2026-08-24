@@ -1,0 +1,39 @@
+/*
+  Project Zomboid mod manager — design tokens.
+  Colors and font roles mirror the projectZomboidPalette / projectZomboidFonts spec.
+*/
+
+:root {
+  /* Base UI */
+  --color-knox-void: #000000;
+  --color-header-slate: #1c1c1c;
+  --color-selection-grey: #2a2e33;
+  --color-knox-void-translucent: rgba(0, 0, 0, 0.8);
+
+  /* Borders & dividers */
+  --color-border-standard: #555555;
+  --color-border-inner: #333333;
+  --color-border-focus: #ffffff;
+
+  /* Typography */
+  --color-text-title: #ffffff;
+  --color-text-base: #e8e8e8;
+  --color-text-muted: #999999;
+
+  /* Status accents */
+  --color-success: #45b545;
+  --color-danger: #cc2222;
+  --color-warning: #d4b224;
+
+  /* Semantic aliases */
+  --color-bg: var(--color-knox-void);
+  --color-bg-panel: var(--color-header-slate);
+  --color-bg-hover: var(--color-selection-grey);
+  --color-border: var(--color-border-standard);
+  --color-text: var(--color-text-base);
+
+  /* Fonts */
+  --font-header: 'Special Elite', system-ui;
+  --font-ui: 'IBM Plex Sans', sans-serif;
+  --font-data: 'Share Tech Mono', monospace;
+}
