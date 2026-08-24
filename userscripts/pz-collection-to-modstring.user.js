@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Project Zomboid Mod List Generator
-// @namespace    pzmodmanager
+// @namespace    pzmodextractor
 // @version      1.0.0
 // @description  Turns a Steam Workshop collection into a ready-to-paste Project Zomboid mod list. If a mod offers more than one Mod ID, you get to pick which one to use.
-// @author       pzmodmanager
+// @author       David Urbina (diomeh)
 // @match        https://steamcommunity.com/sharedfiles/filedetails/*
 // @match        https://steamcommunity.com/workshop/filedetails/*
 // @grant        GM_xmlhttpRequest
