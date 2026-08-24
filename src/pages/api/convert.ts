@@ -26,6 +26,7 @@ interface ModEntry {
   publishedfileid: string;
   title: string;
   previewUrl: string;
+  description: string;
   ok: boolean;
   ids: string[];
   names: string[];
@@ -113,6 +114,7 @@ export const POST: APIRoute = async ({ request }) => {
         publishedfileid: id,
         title: detail?.title || `Unknown item ${id}`,
         previewUrl: detail?.preview_url || '',
+        description: desc,
         ok: detail?.result === 1,
         ids: extractMatches(desc, WORKSHOP_ID_PATTERN),
         names: extractMatches(desc, MOD_ID_PATTERN),

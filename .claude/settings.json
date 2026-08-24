@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm astro *)"
+      "Bash(pnpm astro *)",
+      "WebSearch"
     ]
   }
 }
