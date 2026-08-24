@@ -1,23 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import {
-  parseBBCode,
-  bbExtractText,
-  bbSafeUrl,
-  renderDescription,
-  looksExclusive,
-  candidateKey,
-  toCollectionUrl,
-  buildExportFilename,
-  classifyInput,
-  isModEntry,
-  isCuratedItem,
-  isExportedSource,
-  parseImportPayload,
-  esc,
-  type ModEntry,
-  type CuratedItem,
-  type ExportedSource,
-} from '../src/scripts/modExtractor';
+import { parseBBCode, bbExtractText, bbSafeUrl, renderDescription, looksExclusive, esc } from '../src/lib/bbcode';
+import { candidateKey, toCollectionUrl, buildExportFilename, classifyInput } from '../src/lib/modLogic';
+import { isModEntry, isCuratedItem, isExportedSource, parseImportPayload } from '../src/lib/exportImport';
+import type { ModEntry, CuratedItem, ExportedSource } from '../src/lib/types';
 
 const COLLECTION_ID = '3489663816';
 const ITEM_ID = '3314564075';
@@ -142,7 +127,7 @@ describe('toCollectionUrl', () => {
   });
 
   it('mirrors extractCollectionId from the server for the same inputs', async () => {
-    const { extractCollectionId } = await import('../src/pages/api/convert');
+    const { extractCollectionId } = await import('../src/lib/server/steamApi');
     for (const input of [COLLECTION_ID, ITEM_URL]) {
       const serverId = extractCollectionId(input);
       const clientUrl = toCollectionUrl(input);
@@ -284,14 +269,15 @@ describe('isExportedSource', () => {
 describe('parseImportPayload', () => {
   function validPayload() {
     return {
-      schemaVersion: 2,
+      schemaVersion: 3,
       exportedAt: new Date().toISOString(),
       sources: [makeExportedSource({ kind: 'collection', sourceId: COLLECTION_ID, title: 'Vanilla+ Essentials' })],
       curated: [makeCuratedItem()],
+      b42Format: true,
     };
   }
 
-  it('accepts a well-formed export payload round-trip, preserving sources and curated order', () => {
+  it('accepts a well-formed export payload round-trip, preserving sources, curated order, and b42Format', () => {
     const result = parseImportPayload(validPayload());
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -299,6 +285,7 @@ describe('parseImportPayload', () => {
       expect(result.payload.sources[0].title).toBe('Vanilla+ Essentials');
       expect(result.payload.curated).toHaveLength(1);
       expect(result.payload.curated[0].sources).toEqual(['Custom']);
+      expect(result.payload.b42Format).toBe(true);
     }
   });
 
@@ -328,6 +315,14 @@ describe('parseImportPayload', () => {
   it('rejects a payload missing required scalar fields', () => {
     const payload = validPayload() as any;
     delete payload.exportedAt;
+    const result = parseImportPayload(payload);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toMatch(/missing required fields/i);
+  });
+
+  it('rejects a payload missing b42Format', () => {
+    const payload = validPayload() as any;
+    delete payload.b42Format;
     const result = parseImportPayload(payload);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toMatch(/missing required fields/i);

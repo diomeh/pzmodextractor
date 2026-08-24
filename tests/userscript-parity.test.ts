@@ -2,13 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-// CLAUDE.md calls out that the web app (src/pages/api/convert.ts) and the
+// CLAUDE.md calls out that the web app (src/lib/server/steamApi.ts) and the
 // Tampermonkey userscript (userscripts/pz-collection-to-modstring.user.js)
 // are two independent implementations of the same extraction logic that must
 // be kept in sync manually. This guards against silent drift between them.
 
 const convertSrc = readFileSync(
-  path.resolve(__dirname, '../src/pages/api/convert.ts'),
+  path.resolve(__dirname, '../src/lib/server/steamApi.ts'),
   'utf8',
 );
 const userscriptSrc = readFileSync(
@@ -19,7 +19,7 @@ const userscriptSrc = readFileSync(
 function extractServerPattern(name: string): string {
   const re = new RegExp(`${name} = /(.*)/gim;`);
   const match = convertSrc.match(re);
-  if (!match) throw new Error(`Could not find ${name} in convert.ts`);
+  if (!match) throw new Error(`Could not find ${name} in steamApi.ts`);
   return match[1];
 }
 

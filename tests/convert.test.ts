@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { POST } from '../src/pages/api/convert';
 import {
   extractCollectionId,
   extractMatches,
   WORKSHOP_ID_PATTERN,
   MOD_ID_PATTERN,
-  POST,
-} from '../src/pages/api/convert';
+} from '../src/lib/server/steamApi';
 
 // Fixtures supplied for this suite: a real collection ID and a real single
 // workshop item URL/ID (not a collection).

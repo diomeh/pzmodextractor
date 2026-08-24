@@ -1,17 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { ModExtractorApp } from '../components/ModExtractorApp';
 ---
 
 <Layout
 	title="PZ Mod Extractor"
 	description="Paste Steam Workshop collections, single items, or bare IDs — comma separated — and get a ready-to-use Project Zomboid mod list."
 >
-	<div id="app"></div>
+	<ModExtractorApp client:load />
 </Layout>
-
-<script>
-	import { mount } from '../scripts/modExtractor';
-
-	const root = document.getElementById('app');
-	if (root) mount(root);
-</script>
